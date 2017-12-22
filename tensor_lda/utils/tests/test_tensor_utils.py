@@ -93,7 +93,7 @@ def test_khatri_rao_prod():
 
     for i in xrange(dim_row_prod):
         for j in xrange(dim_col):
-            true_val = a[i / dim_row_b, j] * b[i % dim_row_b, j]
+            true_val = a[i // dim_row_b, j] * b[i % dim_row_b, j]
             assert_almost_equal(true_val, prod[i, j])
 
 
