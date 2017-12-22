@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from sklearn.externals.six.moves import xrange
+
 
 def _check_1d_vector(vector):
     """Check 1D vector shape
