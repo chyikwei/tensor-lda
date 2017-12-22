@@ -72,7 +72,29 @@ def rank_1_tensor_3d(a, b, c):
 
 def khatri_rao_prod(a, b):
     """Calculate Khatri-Rao product
-    calculate khatri_rao_prod of matix 'a' and 'b'
-    
 
+    Parameters
+    ----------
+    a : array, (n, k)
+        rank one vector
+
+    b :  array, (m, k)
+        rank one vector
+
+    Returns
+    -------
+    matrix:  array, (n * m, k)
+        Khatri-Rao product
     """
+
+    a_row, a_col = a.shape
+    b_row, b_col = b.shape
+    # check column size
+    if a_col != b_col:
+        raise ValueError("column dimension mismatch: %d != %d" %
+                         a_col, b_col)
+    matrix = np.empty((a_row * b_row, a_col))
+    for i in xrange(a_col):
+        matrix[:, i] = np.kron(a[:, i], b[:, i])
+    return matrix
+
