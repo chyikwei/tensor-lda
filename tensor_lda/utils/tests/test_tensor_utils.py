@@ -2,8 +2,6 @@ import numpy as np
 
 from numpy.linalg import pinv
 
-#from sklearn.utils.testing import assert_true
-#from sklearn.utils.testing import assert_false
 from sklearn.externals.six.moves import xrange
 from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_array_equal

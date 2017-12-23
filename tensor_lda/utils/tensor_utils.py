@@ -15,12 +15,12 @@ def _check_1d_vector(vector):
 
     Parameters
     ----------
-    vector : array [n,] or [n, 1]
+    vector : array (n,) or (n, 1)
         rank one vector
     
     Returns
     -------
-    vector : array, [n,
+    vector : array, (n,)
     """
 
     v_shape = vector.shape
