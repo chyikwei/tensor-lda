@@ -123,12 +123,12 @@ def test_cooccurrence_expectation():
 def test_second_order_moments():
     # compare create M2 directly vs create eigen value
     # and vectors with optimized method
-    rng = np.random.RandomState(0)
+    rng = np.random.RandomState(100)
 
     n_features = 500
     n_components = 50
     min_count = 3
-    alpha0 = 20.
+    alpha0 = 10.
     n_samples = rng.randint(100, 150)
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
@@ -139,8 +139,8 @@ def test_second_order_moments():
                                      whom='test_second_order_moments')
 
     # create M2 directly
-    m2 = e2.toarray()
-    m2 -= (alpha0 / (alpha0 + 1.)) * (m1 * m1[:, np.newaxis])
+    m2 = (alpha0 + 1.) * e2.toarray()
+    m2 -= (alpha0 * m1) * m1[:, np.newaxis]
     m2_vals_true, m2_vecs_true = sp.linalg.eigsh(m2, k=n_components)
 
     # create M2 eigen values & vectors with optimized method
@@ -154,4 +154,4 @@ def test_second_order_moments():
     # compare reconstructed version
     assert_array_almost_equal(m2_reconstruct_true, m2_reconstruct)
     # compare original M2 with reconstructed version
-    assert_array_almost_equal(m2, m2_reconstruct, decimal=5)
+    assert_array_almost_equal(m2, m2_reconstruct, decimal=4)

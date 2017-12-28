@@ -224,10 +224,14 @@ def second_order_moments(n_components, e2, m1, alpha0):
 
     # eigen values and vectors of E2
     e2_vals, e2_vecs = sp.linalg.eigsh(e2, k=n_components)
+    e2_vals *= (alpha0 + 1.)
     m1_p = np.dot(e2_vecs.T, m1)
-    m2_p = ((-1. * alpha0) / (alpha0 + 1.)) * (m1_p * m1_p[:, np.newaxis])
+
+    # section 5.2 part 1.
+    m2_p = (-1. * alpha0) * (m1_p * m1_p[:, np.newaxis])
     m2_p[np.diag_indices_from(m2_p)] += e2_vals
 
+    # section 5.2 part 1.
     # eigen values and vectors of M2 prime 
     m2p_vals, m2p_vecs = LA.eigh(m2_p)
 
