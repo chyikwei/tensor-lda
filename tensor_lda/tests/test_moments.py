@@ -11,7 +11,8 @@ from sklearn.utils.testing import assert_greater
 from sklearn.externals.six.moves import xrange
 
 from tensor_lda.moments import (first_order_moments,
-                                cooccurrence_expectation)
+                                cooccurrence_expectation,
+                                second_order_moments)
 
 
 def test_first_order_moments():
@@ -115,3 +116,42 @@ def test_cooccurrence_expectation():
     assert_greater(ignored_cnt, 0)
     assert_equal(mask.sum(), n_samples - ignored_cnt)
     assert_array_almost_equal(result, e2.toarray())
+    # cooccurrence should be symmertic
+    assert_array_almost_equal(result, e2.toarray().T)
+
+
+def test_second_order_moments():
+    # compare create M2 directly vs create eigen value
+    # and vectors with optimized method
+    rng = np.random.RandomState(0)
+
+    n_features = 500
+    n_components = 50
+    min_count = 3
+    alpha0 = 20.
+    n_samples = rng.randint(100, 150)
+    doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
+    doc_word_mtx = sp.csr_matrix(doc_word_mtx)
+
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
+                                whom='test_second_order_moments')
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
+                                     whom='test_second_order_moments')
+
+    # create M2 directly
+    m2 = e2.toarray()
+    m2 -= (alpha0 / (alpha0 + 1.)) * (m1 * m1[:, np.newaxis])
+    m2_vals_true, m2_vecs_true = sp.linalg.eigsh(m2, k=n_components)
+
+    # create M2 eigen values & vectors with optimized method
+    m2_vals, m2_vecs = second_order_moments(n_components, e2, m1, alpha0)
+    assert_equal(m2_vals.shape[0], n_components)
+    assert_equal(m2_vecs.shape[0], n_features)
+    assert_equal(m2_vecs.shape[1], n_components)
+
+    m2_reconstruct_true = np.dot(np.dot(m2_vecs_true, np.diag(m2_vals_true)), m2_vecs_true.T)
+    m2_reconstruct = np.dot(np.dot(m2_vecs, np.diag(m2_vals)), m2_vecs.T)
+    # compare reconstructed version
+    assert_array_almost_equal(m2_reconstruct_true, m2_reconstruct)
+    # compare original M2 with reconstructed version
+    assert_array_almost_equal(m2, m2_reconstruct, decimal=5)
