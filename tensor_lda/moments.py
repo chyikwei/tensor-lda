@@ -239,3 +239,45 @@ def second_order_moments(n_components, e2, m1, alpha0):
     m2_vecs = np.dot(e2_vecs, m2p_vecs)
 
     return (m2_vals, m2_vecs)
+
+
+def whitening(m2_eigen_values, m2_eign_vectors):
+    """Compute the whitening matrix from M2
+    
+    Parameters
+    ----------
+    m2_eigen_values: array, shape=(n_components,)
+        eigen values from M2
+
+    m2_eigen_vectors: array, shape=(n_features, n_components)
+        eigen vectors from M2
+
+    Returns
+    -------
+    whitening_matrix: array, shape=(n_features, n_components)
+
+    """
+    lambda_sqrt = np.diag(1. / np.sqrt(m2_eigen_values))
+    whitening_matrix = np.dot(m2_eign_vectors, lambda_sqrt)
+    return whitening_matrix
+
+
+def unwhitening(m2_eigen_values, m2_eign_vectors):
+    """Compute the whitening matrix from M2
+    
+    Parameters
+    ----------
+    m2_eigen_values: array, shape=(n_components,)
+        eigen values from M2
+
+    m2_eigen_vectors: array, shape=(n_features, n_components)
+        eigen vectors from M2
+
+    Returns
+    -------
+    unwhitening_matrix: array, shape=(n_features, n_components)
+
+    """
+    lambda_sqrt = np.diag(np.sqrt(m2_eigen_values))
+    unwhitening_matrix = np.dot(m2_eign_vectors, lambda_sqrt)
+    return unwhitening_matrix
