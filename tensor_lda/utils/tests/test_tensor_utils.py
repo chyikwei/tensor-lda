@@ -11,7 +11,10 @@ from sklearn.utils.testing import assert_raises_regexp
 
 from tensor_lda.utils.tensor_utils import (_check_1d_vector,
                                            rank_1_tensor_3d,
-                                           khatri_rao_prod)
+                                           khatri_rao_prod,
+                                           tensor_3d_permute,
+                                           tensor_3d_from_matrix_vector,
+                                           tensor_3d_from_vector_matrix)
 
 
 def test_check_1d_vectors():
@@ -136,3 +139,77 @@ def test_khatri_rao_properties():
     result_inv = pinv(result)
     reconstruct_inv = np.dot(result_inv, prod.T)
     assert_array_almost_equal(prod_inv, reconstruct_inv)
+
+
+def test_tensor_3d_permute():
+    rng = np.random.RandomState(0)
+
+    dim1 = rng.randint(20, 50)
+    dim2 = rng.randint(20, 50)
+    dim3 = rng.randint(20, 50)
+
+    tensor = rng.rand(dim1, (dim2 * dim3))
+
+    #dim1 = 2
+    #dim2 = 3
+    #dim3 = 4
+
+    #mtx = np.arange(6).reshape(2, 3)
+    #vector = np.array([7, 8, 9, 10])
+
+    #tensor = tensor_3d_from_matrix_vector(mtx, vector)
+
+    # test (2, 3, 1) mode
+    permute_2_3_1 = tensor_3d_permute(tensor, (dim1, dim2, dim3), a=2, b=3, c=1)
+    assert_equal(dim2, permute_2_3_1.shape[0])
+    assert_equal(dim3 * dim1, permute_2_3_1.shape[1])
+
+    #print tensor
+    #print permute_2_3_1
+
+    for i1 in xrange(dim2):
+        for i2 in xrange(dim3):
+            for i3 in xrange(dim1):
+                val_permute = permute_2_3_1[i1, (dim3 * i3) + i2]
+                val_origin = tensor[i3, (dim2 * i2) + i1]
+                assert_equal(val_permute, val_origin)
+
+    # TODO: test other mode
+
+
+def test_tensor_3d_from_matrix_vector():
+    rng = np.random.RandomState(0)
+
+    dim1 = rng.randint(20, 30)
+    dim2 = rng.randint(20, 30)
+    dim3 = rng.randint(20, 30)
+
+    mtx = rng.rand(dim1, dim2)
+    vector = rng.rand(dim3)
+
+    tensor = tensor_3d_from_matrix_vector(mtx, vector)
+    for i in xrange(dim1):
+        for j in xrange(dim2):
+            for k in xrange(dim3):
+                val_true = mtx[i, j] * vector[k]
+                val = tensor[i, (dim2 * k) + j]
+                assert_equal(val_true, val)
+
+
+def test_tensor_3d_from_vector_matrix():
+    rng = np.random.RandomState(3)
+
+    dim1 = rng.randint(20, 30)
+    dim2 = rng.randint(20, 30)
+    dim3 = rng.randint(20, 30)
+
+    mtx = rng.rand(dim1, dim2)
+    vector = rng.rand(dim3)
+
+    tensor = tensor_3d_from_vector_matrix(vector, mtx)
+    for i in xrange(dim1):
+        for j in xrange(dim2):
+            for k in xrange(dim3):
+                val_true = vector[i] * mtx[j, k]
+                val = tensor[i, (dim2 * k) + j]
+                assert_equal(val_true, val)
