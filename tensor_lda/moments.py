@@ -355,8 +355,8 @@ def whitening_triples_expectation(X, min_words, whitening_matrix):
         a2 = tensor_3d_from_vector_matrix(w_c, w_t_diag_w)
         tensor_shape = (n_components, n_components, n_components)
         a2_3_1_2 = tensor_3d_permute(a2, tensor_shape, 3, 1, 2)
-        a2_2_3_1 = tensor_3d_permute(a2,tensor_shape, 2, 3, 1)
-        e3 += (a1 - a2 - a2_3_1_2 - a2_2_3_1)
+        a2_2_3_1 = tensor_3d_permute(a2, tensor_shape, 2, 3, 1)
+        e3 += (rho * (a1 - a2 - a2_3_1_2 - a2_2_3_1))
 
         # coef in eq (11)
         for w_id, w_cnt in zip(ids, cnts):

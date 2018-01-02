@@ -243,4 +243,4 @@ def test_tensor_3d_prod():
         for j in xrange(7):
             for k in xrange(8):
                 val_true = get_prod_val(tensor, a, b, c, i, j, k)
-                assert_almost_equal(val_true, t2[i , j, k])
+                assert_almost_equal(val_true, t2[i, j, k])

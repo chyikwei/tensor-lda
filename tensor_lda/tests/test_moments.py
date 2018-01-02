@@ -38,7 +38,6 @@ def _triples_expectation(X):
         # get word_id and count in each document
         ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
         cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
-
         unique_ids = len(ids)
         total = cnts.sum()
         coef = 1. / (total * (total - 1.) * (total - 2.))
@@ -49,10 +48,13 @@ def _triples_expectation(X):
             continue
 
         for i in xrange(unique_ids):
+            id_i = ids[i]
             cnt_i = cnts[i]
             for j in xrange(unique_ids):
+                id_j = ids[j]
                 cnt_j = cnts[j]
                 for k in xrange(unique_ids):
+                    id_k = ids[k]
                     cnt_k = cnts[k]
                     # case_1: i = j = k
                     if i == j and j == k:
@@ -72,7 +74,7 @@ def _triples_expectation(X):
                     # case_5: i != k, j != k, i != k
                     else:
                         combinations = cnt_i * cnt_j * cnt_k
-                    e_triples[i, j, k] += (coef * combinations)
+                    e_triples[id_i, id_j, id_k] += (coef * combinations)
     e_triples /= (n_samples - ignored_cnt)
     return e_triples
 
@@ -284,9 +286,7 @@ def test_whitening_unwhitening():
     assert_array_almost_equal(np.eye(n_components, n_components), identity)
 
 
-def _test_whitening_triples_expectation():
-    # WIP
-
+def test_whitening_triples_expectation():
     rng = np.random.RandomState(3)
 
     n_features = 100
@@ -307,5 +307,38 @@ def _test_whitening_triples_expectation():
     e3_w_true = tensor_3d_prod(e3, W, W, W)
     # flatten
     e3_w_true_flatten = np.hstack([e3_w_true[:, :, i] for i in xrange(n_components)])
+
+    assert_array_almost_equal(e3_w_true_flatten, e3_w)
+
+
+def test_whitening_triples_expectation_simple():
+    rng = np.random.RandomState(4)
+
+    doc_word_mtx = np.array([
+        [2, 3, 0, 1],
+        [3, 4, 5, 7],
+        [1, 4, 6, 7],
+        [5, 5, 5, 5],
+        [1, 4, 7, 10],
+    ])
+
+    n_features = 4
+    n_components = 2
+    doc_word_mtx = sp.csr_matrix(doc_word_mtx)
+
+    # random matrix used as whitening matrix
+    W = rng.rand(4, 2)
+
+    e3_w = whitening_triples_expectation(doc_word_mtx, 3, W)
+
+    e3 = _triples_expectation(doc_word_mtx)
+    # compute E3(W, W, W) directly
+    e3_w_true = tensor_3d_prod(e3, W, W, W)
+    # flatten
+    e3_w_true_flatten = np.hstack([e3_w_true[:, :, i] for i in xrange(n_components)])
+    #print e3
+    #print e3_w_true
+    #print e3_w_true_flatten
+    #print e3_w
 
     assert_array_almost_equal(e3_w_true_flatten, e3_w)
