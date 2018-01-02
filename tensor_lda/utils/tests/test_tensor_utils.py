@@ -14,7 +14,8 @@ from tensor_lda.utils.tensor_utils import (_check_1d_vector,
                                            khatri_rao_prod,
                                            tensor_3d_permute,
                                            tensor_3d_from_matrix_vector,
-                                           tensor_3d_from_vector_matrix)
+                                           tensor_3d_from_vector_matrix,
+                                           tensor_3d_prod)
 
 
 def test_check_1d_vectors():
@@ -203,8 +204,8 @@ def test_tensor_3d_from_vector_matrix():
     dim2 = rng.randint(20, 30)
     dim3 = rng.randint(20, 30)
 
-    mtx = rng.rand(dim1, dim2)
-    vector = rng.rand(dim3)
+    vector = rng.rand(dim1)
+    mtx = rng.rand(dim2, dim3)
 
     tensor = tensor_3d_from_vector_matrix(vector, mtx)
     for i in xrange(dim1):
@@ -213,3 +214,33 @@ def test_tensor_3d_from_vector_matrix():
                 val_true = vector[i] * mtx[j, k]
                 val = tensor[i, (dim2 * k) + j]
                 assert_equal(val_true, val)
+
+
+def test_tensor_3d_prod():
+
+    def get_prod_val(t, a, b, c, i1, i2, i3):
+        t1, t2, t3 = t.shape
+        val = 0.0
+        for j1 in xrange(t1):
+            for j2 in xrange(t2):
+                for j3 in xrange(t3):
+                    val += (t[j1, j2, j3] * a[j1, i1] * b[j2, i2] * c[j3, i3])
+        return val
+
+    rng = np.random.RandomState(3)
+
+    tensor = rng.rand(3, 4, 5)
+    a = rng.rand(3, 6)
+    b = rng.rand(4, 7)
+    c = rng.rand(5, 8)
+
+    t2 = tensor_3d_prod(tensor, a, b, c)
+    assert_equal(6, t2.shape[0])
+    assert_equal(7, t2.shape[1])
+    assert_equal(8, t2.shape[2])
+
+    for i in xrange(6):
+        for j in xrange(7):
+            for k in xrange(8):
+                val_true = get_prod_val(tensor, a, b, c, i, j, k)
+                assert_almost_equal(val_true, t2[i , j, k])

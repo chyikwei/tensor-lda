@@ -242,3 +242,43 @@ def khatri_rao_prod(a, b):
         matrix[:, i] = np.kron(a[:, i], b[:, i])
     return matrix
 
+
+def tensor_3d_prod(tensor, a, b, c):
+    """Calculate product of 3D tensor with matrix on each dimension
+
+    Parameters
+    ----------
+    tensor : array, (n1, n2, n3)
+    a : array, (n1, m)
+
+    b :  array, (n2, n)
+
+    c :  array, (n3, p)
+
+    Returns
+    -------
+    t_abc : array, (m, n, p)
+        tensor(a, b, c)
+
+    """
+    n1, n2, n3 = tensor.shape
+    n1_, m = a.shape
+    n2_, n = b.shape
+    n3_, p = c.shape
+
+    assert n1 == n1_
+    assert n2 == n2_
+    assert n3 == n3_
+
+    # (n1, n2, p)
+    t_c = np.dot(tensor, c)
+
+    t_bc = np.empty((n1, n, p))
+    for i in xrange(n1):
+        # (n, p) = (n, n2) * (n2, p)
+        t_bc[i , :, :] = np.dot(b.T, t_c[i, :, :])
+
+    t_abc = np.empty((m, n, p))
+    for i in xrange(p):
+        t_abc[:, :, i] = np.dot(a.T, t_bc[:, :, i])
+    return t_abc

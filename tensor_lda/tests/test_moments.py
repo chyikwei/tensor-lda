@@ -15,7 +15,66 @@ from tensor_lda.moments import (first_order_moments,
                                 cooccurrence_expectation,
                                 second_order_moments,
                                 whitening,
-                                unwhitening)
+                                unwhitening,
+                                whitening_triples_expectation)
+
+from tensor_lda.utils.tensor_utils import tensor_3d_prod
+
+
+def _triples_expectation(X):
+    # calculate the exact triple words expectation
+    # this will generate a (n_features, n_features * n_features)
+    # matrix
+
+    n_samples, n_features = X.shape
+    X_data = X.data
+    X_indices = X.indices
+    X_indptr = X.indptr
+
+    ignored_cnt = 0
+    e_triples = np.zeros((n_features, n_features, n_features))
+
+    for idx_d in xrange(n_samples):
+        # get word_id and count in each document
+        ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+        cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+
+        unique_ids = len(ids)
+        total = cnts.sum()
+        coef = 1. / (total * (total - 1.) * (total - 2.))
+        # min word count for triples in a doc is 3.
+        # ignore others
+        if total < 3:
+            ignored_cnt += 1
+            continue
+
+        for i in xrange(unique_ids):
+            cnt_i = cnts[i]
+            for j in xrange(unique_ids):
+                cnt_j = cnts[j]
+                for k in xrange(unique_ids):
+                    cnt_k = cnts[k]
+                    # case_1: i = j = k
+                    if i == j and j == k:
+                        if cnt_i >= 3:
+                            combinations = cnt_i * (cnt_i - 1.) * (cnt_i - 2.)
+                        else:
+                            combinations = 0.
+                    # case_2: i = j, j != k
+                    elif i == j and j != k:
+                        combinations = cnt_i * (cnt_i - 1.) * cnt_k
+                    # case_3: j = k, i != j
+                    elif j == k and i != j:
+                        combinations = cnt_j * (cnt_j - 1.) * cnt_i
+                    # case_4: i = k, j != k
+                    elif i == k and j != k:
+                        combinations = cnt_i * (cnt_i - 1.) * cnt_j
+                    # case_5: i != k, j != k, i != k
+                    else:
+                        combinations = cnt_i * cnt_j * cnt_k
+                    e_triples[i, j, k] += (coef * combinations)
+    e_triples /= (n_samples - ignored_cnt)
+    return e_triples
 
 
 def test_first_order_moments():
@@ -189,6 +248,10 @@ def test_whitening():
     # create whitening matrix
     W = whitening(m2_vals, m2_vecs)
 
+    # check whitening matrix shape
+    assert_equal(n_features, W.shape[0])
+    assert_equal(n_components, W.shape[1])
+
     # M2(W, W) should be identity matrix
     identity = np.dot(np.dot(W.T, m2), W)
     assert_array_almost_equal(np.eye(n_components, n_components), identity)
@@ -219,3 +282,30 @@ def test_whitening_unwhitening():
     uW = unwhitening(m2_vals, m2_vecs)
     identity = np.dot(W.T, uW)
     assert_array_almost_equal(np.eye(n_components, n_components), identity)
+
+
+def _test_whitening_triples_expectation():
+    # WIP
+
+    rng = np.random.RandomState(3)
+
+    n_features = 100
+    n_components = 20
+    n_samples = 50
+    doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
+    doc_word_mtx = sp.csr_matrix(doc_word_mtx)
+
+    # random matrix used as whitening matrix
+    W = rng.rand(n_features, n_components)
+
+    # compute E3(W, W, W) with optimized method
+    e3_w = whitening_triples_expectation(doc_word_mtx, 3, W)
+
+    # create E3
+    e3 = _triples_expectation(doc_word_mtx)
+    # compute E3(W, W, W) directly
+    e3_w_true = tensor_3d_prod(e3, W, W, W)
+    # flatten
+    e3_w_true_flatten = np.hstack([e3_w_true[:, :, i] for i in xrange(n_components)])
+
+    assert_array_almost_equal(e3_w_true_flatten, e3_w)
