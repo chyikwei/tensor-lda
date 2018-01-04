@@ -371,6 +371,45 @@ def whitening_triples_expectation(X, min_words, whitening_matrix):
     return e3
 
 
+def whitening_tensor_e2_m1(whitened_m1, alpha0):
+    """Compute Expectaion of E2 x M1 tensor in 3 mode
+
+    Compute sum of whitened E[x1, x2, m1],
+    E[x1, m1, x2], and E[m1, x1, x2]
+
+    Parameters
+    ----------
+    whitened_m1: int
+        Number of components
+
+    alpha0: sparse matrix, shape=(n_features, n_features)
+        Expectation of word pairs. e2[i, j] is the expectation of word `i`
+        and `j` in the same document.
+
+    Returns
+    -------
+    u1_2_3 : array, shape=(n_components,)
+        eigen values of sencond-order moments
+
+    """
+    n_components = whitened_m1.shape[0]
+    tensor_shape = (n_components, n_components, n_components)
+
+    # U1, U2, U3. eq (13) to (15)
+    w_t_e2_w = alpha0 * (whitened_m1[np.newaxis, :] * 
+                         whitened_m1[:, np.newaxis])
+    w_t_e2_w[np.diag_indices_from(w_t_e2_w)] += 1.
+    w_t_e2_w /= (alpha0 + 1.)
+    # U1
+    u1 = tensor_3d_from_matrix_vector(w_t_e2_w, whitened_m1)
+    u1_2_3 = u1.copy()
+    # add U2
+    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 3, 1, 2)
+    # add U3
+    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 2, 3, 1)
+    return u1_2_3
+
+
 def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
     """Transformed Third order moments
 
@@ -392,9 +431,10 @@ def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
         is 3 since we need 3rd order moments.
 
     whitening_matrix : array, shape=(n_features, n_components)
+        Whitening matrix calculated from M2
 
     m1 : array, shape=(n_features,)
-        First Order Moments
+        First order moments
 
     alpha0 : Double
         Sum of topic topic concentration parameter
@@ -405,27 +445,18 @@ def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
         3D tensor in unfolded format
 
     """
-    n_features = X.shape[1]
-    tensor_shape = (n_components, n_components, n_components)
-
     wt_m1 = np.dot(whitening_matrix.T, m1)
-    m1_3d = rank_1_tensor_3d(wt_m1, wt_m1, wt_m1)
 
     # E3. eq (8) to (11)
     e3 = whitening_triples_expectation(X, min_words, whitening_matrix)
 
     # U1, U2, U3. eq (13) to (15)
-    w_t_e2_w = alpha0 * (wt_m1[np.newaxis, :] * wt_m1[:, np.newaxis])
-    w_t_e2_w[np.diag_indices_from(w_t_e2_w)] += 1.
-    w_t_e2_w /= (alpha0 + 1.)
-    # U1
-    u1_2_3 = tensor_3d_from_matrix_vector(w_t_e2_w, wt_m1)
-    # add U2
-    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 1, 3, 2)
-    # add U3
-    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 2, 3, 1)
+    u1_2_3 = whitening_tensor_e2_m1(wt_m1, alpha0)
 
-    # eq (16)
+    # M1 x 3 tensor. eq (16)
+    m1_3d = rank_1_tensor_3d(wt_m1, wt_m1, wt_m1)
+
+    # TODO: do inplace update
     e3 *= ((alpha0 + 1.) * (alpha0 + 2.) * 0.5)
     u1_2_3 *= (alpha0 * (alpha0 + 1.) * 0.5)
     m1_3d *= (alpha0 * alpha0)

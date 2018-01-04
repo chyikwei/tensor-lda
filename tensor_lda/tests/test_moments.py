@@ -16,9 +16,13 @@ from tensor_lda.moments import (first_order_moments,
                                 second_order_moments,
                                 whitening,
                                 unwhitening,
-                                whitening_triples_expectation)
+                                whitening_triples_expectation,
+                                whitening_tensor_e2_m1)
 
-from tensor_lda.utils.tensor_utils import tensor_3d_prod
+from tensor_lda.utils.tensor_utils import (tensor_3d_prod,
+                                           tensor_3d_from_matrix_vector,
+                                           tensor_3d_permute,
+                                           rank_1_tensor_3d)
 
 
 def _triples_expectation(X):
@@ -301,9 +305,9 @@ def test_whitening_triples_expectation():
     # compute E3(W, W, W) with optimized method
     e3_w = whitening_triples_expectation(doc_word_mtx, 3, W)
 
-    # create E3
+    # create E3 directly
     e3 = _triples_expectation(doc_word_mtx)
-    # compute E3(W, W, W) directly
+    # compute E3(W, W, W)
     e3_w_true = tensor_3d_prod(e3, W, W, W)
     # flatten
     e3_w_true_flatten = np.hstack([e3_w_true[:, :, i] for i in xrange(n_components)])
@@ -312,6 +316,7 @@ def test_whitening_triples_expectation():
 
 
 def test_whitening_triples_expectation_simple():
+    # TODO: for debug. delete it later
     rng = np.random.RandomState(4)
 
     doc_word_mtx = np.array([
@@ -322,17 +327,16 @@ def test_whitening_triples_expectation_simple():
         [1, 4, 7, 10],
     ])
 
-    n_features = 4
     n_components = 2
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
 
-    # random matrix used as whitening matrix
+    # use random matrix as whitening matrix
     W = rng.rand(4, 2)
 
     e3_w = whitening_triples_expectation(doc_word_mtx, 3, W)
 
-    e3 = _triples_expectation(doc_word_mtx)
     # compute E3(W, W, W) directly
+    e3 = _triples_expectation(doc_word_mtx)
     e3_w_true = tensor_3d_prod(e3, W, W, W)
     # flatten
     e3_w_true_flatten = np.hstack([e3_w_true[:, :, i] for i in xrange(n_components)])
@@ -340,5 +344,74 @@ def test_whitening_triples_expectation_simple():
     #print e3_w_true
     #print e3_w_true_flatten
     #print e3_w
-
     assert_array_almost_equal(e3_w_true_flatten, e3_w)
+
+
+def _compute_e2_m1_directly(X, w, q):
+    n_samples = X.shape[0]
+    n_components = w.shape[1]
+
+    X_data = X.data
+    X_indices = X.indices
+    X_indptr = X.indptr
+
+    ignored_cnt = 0
+    e2_m1 = np.zeros((n_components, n_components * n_components))
+
+    for idx_d in xrange(n_samples):
+        total = X[idx_d, :].sum()
+        if total < 3.:
+            ignored_cnt += 1
+            continue
+
+        c_d = X[idx_d, :].toarray().flatten()
+        ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+        cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+
+
+        coef = 1. / (total * (total - 1.))
+        p = np.dot(w.T, c_d)
+        u1_2_3 = rank_1_tensor_3d(p, p, q)
+        u1_2_3 += rank_1_tensor_3d(p, q, p)
+        u1_2_3 += rank_1_tensor_3d(q, p, p)
+        for w_idx, w_cnt in zip(ids, cnts):
+            w_i = w[w_idx, :]
+            c_q = w_cnt * q
+            u1_2_3 -= rank_1_tensor_3d(w_i, w_i, c_q)
+            u1_2_3 -= rank_1_tensor_3d(w_i, c_q, w_i)
+            u1_2_3 -= rank_1_tensor_3d(c_q, w_i, w_i)
+        e2_m1 += (u1_2_3 * coef)
+    e2_m1 /= (n_samples - ignored_cnt)
+    return e2_m1
+
+
+def test_whitening_tensor_e2_m1():
+    rng = np.random.RandomState(12)
+
+    n_features = 300
+    n_components = 25
+    min_count = 3
+    alpha0 = 10.
+    n_samples = rng.randint(100, 150)
+    doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
+    doc_word_mtx = sp.csr_matrix(doc_word_mtx)
+
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
+                                whom='test_whitening_unwhitening')
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
+                                     whom='test_whitening_unwhitening')
+
+    # create M2 directly
+    m2 = (alpha0 + 1.) * e2.toarray()
+    m2 -= (alpha0 * m1) * m1[:, np.newaxis]
+    m2_vals, m2_vecs = sp.linalg.eigsh(m2, k=n_components)
+    # create whitening matrix
+    W = whitening(m2_vals, m2_vecs)
+
+    # optimized method
+    wt_m1 = np.dot(W.T, m1)
+    u1_2_3 = whitening_tensor_e2_m1(wt_m1, alpha0)
+
+    # compute directly
+    u1_2_3_true = _compute_e2_m1_directly(doc_word_mtx, W, wt_m1)
+    assert_array_almost_equal(u1_2_3_true, u1_2_3)
