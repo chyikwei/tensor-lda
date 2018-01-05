@@ -5,7 +5,6 @@ from sklearn.utils.testing import assert_equal
 from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_array_almost_equal
 from sklearn.utils.testing import assert_almost_equal
-from sklearn.utils.testing import assert_raises_regexp
 from sklearn.utils.testing import assert_greater
 from sklearn.utils.testing import assert_true
 
@@ -20,8 +19,6 @@ from tensor_lda.moments import (first_order_moments,
                                 whitening_tensor_e2_m1)
 
 from tensor_lda.utils.tensor_utils import (tensor_3d_prod,
-                                           tensor_3d_from_matrix_vector,
-                                           tensor_3d_permute,
                                            rank_1_tensor_3d)
 
 
@@ -93,8 +90,7 @@ def test_first_order_moments():
     word_cnts = doc_word_mtx.sum(axis=1).astype('float')
     result = (doc_word_mtx / word_cnts[:, np.newaxis]).sum(axis=0)
     result /= n_samples
-    m1, ignored_cnt = first_order_moments(doc_word_mtx, min_words=0,
-                             whom='test_first_order_moments')
+    m1, ignored_cnt = first_order_moments(doc_word_mtx, min_words=0)
     assert_equal(0, ignored_cnt)
     assert_array_almost_equal(result, m1)
 
@@ -112,15 +108,14 @@ def test_first_order_moments_with_ignored_count():
 
     result = (doc_word_mtx / word_cnts[:, np.newaxis])[mask, :].sum(axis=0)
     result /= mask.sum()
-    m1, ignored_cnt = first_order_moments(doc_word_mtx, min_words=min_count,
-                             whom='test_first_order_moments')
+    m1, ignored_cnt = first_order_moments(doc_word_mtx, min_words=min_count)
     assert_greater(ignored_cnt, 0)
     assert_equal(mask.sum(), n_samples - ignored_cnt)
     assert_array_almost_equal(result, m1)
 
     # sparse matrix should return same result
-    m1_2, ignored_cnt_2 = first_order_moments(sp.csr_matrix(doc_word_mtx),
-                        min_words=min_count, whom='test_first_order_moments')
+    m1_2, ignored_cnt_2 = first_order_moments(
+        sp.csr_matrix(doc_word_mtx), min_words=min_count)
     assert_equal(ignored_cnt, ignored_cnt_2)
     assert_array_almost_equal(m1, m1_2)
 
@@ -149,8 +144,7 @@ def test_cooccurrence_expectation_simple():
     result = (result_1 / float(6 * 5)) + \
              (result_2 / float(10 * 9))
     result /= 2
-    e2, ignored_cnt = cooccurrence_expectation(doc_word_mtx, min_words=3,
-                             whom='test_cooccurrence_expectation')
+    e2, ignored_cnt = cooccurrence_expectation(doc_word_mtx, min_words=3)
 
     assert_equal(ignored_cnt, 0)
     assert_array_almost_equal(result, e2.toarray())
@@ -178,8 +172,8 @@ def test_cooccurrence_expectation():
         result += result_i
     result /= mask.sum()
 
-    e2, ignored_cnt = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
-                             whom='test_cooccurrence_expectation')
+    e2, ignored_cnt = cooccurrence_expectation(
+        doc_word_mtx, min_words=min_count)
 
     assert_greater(ignored_cnt, 0)
     assert_equal(mask.sum(), n_samples - ignored_cnt)
@@ -201,10 +195,8 @@ def test_second_order_moments():
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
 
-    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
-                                whom='test_second_order_moments')
-    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
-                                     whom='test_second_order_moments')
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count)
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count)
 
     # create M2 directly
     m2 = (alpha0 + 1.) * e2.toarray()
@@ -242,10 +234,8 @@ def test_whitening():
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
 
-    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
-                                whom='test_whitening')
-    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
-                                     whom='test_whitening')
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count)
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count)
 
     # create M2 directly
     m2 = (alpha0 + 1.) * e2.toarray()
@@ -274,10 +264,8 @@ def test_whitening_unwhitening():
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
 
-    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
-                                whom='test_whitening_unwhitening')
-    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
-                                     whom='test_whitening_unwhitening')
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count)
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count)
 
     # create M2 directly
     m2 = (alpha0 + 1.) * e2.toarray()
@@ -396,10 +384,8 @@ def test_whitening_tensor_e2_m1():
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features)).astype('float')
     doc_word_mtx = sp.csr_matrix(doc_word_mtx)
 
-    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count,
-                                whom='test_whitening_unwhitening')
-    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count,
-                                     whom='test_whitening_unwhitening')
+    m1, _ = first_order_moments(doc_word_mtx, min_words=min_count)
+    e2, _ = cooccurrence_expectation(doc_word_mtx, min_words=min_count)
 
     # create M2 directly
     m2 = (alpha0 + 1.) * e2.toarray()

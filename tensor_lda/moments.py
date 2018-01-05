@@ -3,9 +3,7 @@ from numpy import linalg as LA
 import scipy.sparse as sp
 
 from sklearn.externals.six.moves import xrange
-from sklearn.utils import (check_random_state, check_array,
-                           gen_batches, gen_even_slices,
-                           _get_n_jobs)
+from sklearn.utils import check_array
 from sklearn.utils.validation import check_non_negative
 
 from .utils.tensor_utils import (rank_1_tensor_3d,
@@ -14,7 +12,7 @@ from .utils.tensor_utils import (rank_1_tensor_3d,
                                  tensor_3d_permute)
 
 
-def first_order_moments(X, min_words, whom):
+def first_order_moments(X, min_words=3):
     """First-Order Moments
     
     First order Moment of document-word frequency matrix.
@@ -26,12 +24,9 @@ def first_order_moments(X, min_words, whom):
         number of documnet and `n_features` are number of unique
         words in the corpus.
     
-    min_words : Integer
+    min_words : Integer, default=3
         Minimum number of words in each document. In LDA, the number
         is 3 since we need 3rd order moments.
-
-    whom : string
-        which method called this function.
 
     Returns
     -------
@@ -42,8 +37,6 @@ def first_order_moments(X, min_words, whom):
         Number of ignored documents.
 
     """
-    X = check_array(X, accept_sparse='csr')
-    check_non_negative(X, whom)
     n_samples, n_features = X.shape
     is_sparse_x = sp.issparse(X)
 
@@ -79,7 +72,7 @@ def first_order_moments(X, min_words, whom):
     return (e1, ignored_docs)
 
 
-def cooccurrence_expectation(X, min_words, whom, batch_size=1000):
+def cooccurrence_expectation(X, min_words=3, batch_size=1000):
     """Expectation of Word Co-occurrence
 
     Expectation of 2 words occured in the same document.
@@ -91,12 +84,12 @@ def cooccurrence_expectation(X, min_words, whom, batch_size=1000):
         number of documnet and `n_features` are number of unique
         words in the corpus.
     
-    min_words : Integer
+    min_words : Integer, default=3
         Minimum number of words in each document. In LDA, the number
         is 3 since we need 3rd order moments.
-
-    whom : string
-        which method called this function.
+    
+    batch_size : Integer, default=1000
+        batch size of each word pairs
 
     Returns
     -------
@@ -108,12 +101,9 @@ def cooccurrence_expectation(X, min_words, whom, batch_size=1000):
 
     """
 
-    X = check_array(X, accept_sparse='csr')
-    check_non_negative(X, whom)
     n_samples, n_features = X.shape
     is_sparse_x = sp.issparse(X)
 
-    pairs = []
     doc_word_cnts = np.squeeze(np.asarray(X.sum(axis=1))).reshape(n_samples,)
     ignored_docs = 0
 
@@ -410,7 +400,7 @@ def whitening_tensor_e2_m1(whitened_m1, alpha0):
     return u1_2_3
 
 
-def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
+def third_order_monents(X, whitening_matrix, m1, alpha0, min_words=3):
     """Transformed Third order moments
 
         Directly compute 3rd order moments requires `O(V^3)`
@@ -426,10 +416,6 @@ def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
         number of documnet and `n_features` are number of unique
         words in the corpus.
 
-    min_words : Integer
-        Minimum number of words in each document. In LDA, the number
-        is 3 since we need 3rd order moments.
-
     whitening_matrix : array, shape=(n_features, n_components)
         Whitening matrix calculated from M2
 
@@ -438,6 +424,10 @@ def third_order_monents(X, min_words, whitening_matrix, m1, alpha0):
 
     alpha0 : Double
         Sum of topic topic concentration parameter
+
+    min_words : Integer, default=3
+        Minimum number of words in each document. In LDA, the number
+        is 3 since we need 3rd order moments.
 
     Returns
     -------
