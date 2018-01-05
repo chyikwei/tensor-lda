@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import numpy as np
 from numpy import linalg as LA
 import scipy.sparse as sp
@@ -173,7 +175,7 @@ def cooccurrence_expectation(X, min_words=3, batch_size=1000):
             vals = []
 
     # last batch
-    if len(rows) > 0:
+    if rows:
         r = np.hstack(rows)
         c = np.hstack(cols)
         data = np.hstack(vals)
@@ -217,7 +219,9 @@ def second_order_moments(n_components, e2, m1, alpha0):
     """
 
     # eigen values and vectors of E2
-    e2_vals, e2_vecs = sp.linalg.eigsh(e2, k=n_components)
+    #e2_vals, e2_vecs = sp.linalg.eigsh(e2, k=n_components, which='LM')
+    e2_vecs, e2_vals, _ = sp.linalg.svds(e2, k=n_components, which='LM',
+                                         return_singular_vectors=True)
     e2_vals *= (alpha0 + 1.)
     m1_p = np.dot(e2_vecs.T, m1)
 
@@ -226,8 +230,8 @@ def second_order_moments(n_components, e2, m1, alpha0):
     m2_p[np.diag_indices_from(m2_p)] += e2_vals
 
     # section 5.2 part 1.
-    # eigen values and vectors of M2 prime 
-    m2p_vals, m2p_vecs = LA.eigh(m2_p)
+    # eigen values and vectors of M2 prime
+    m2p_vecs, m2p_vals, _ = LA.svd(m2_p)
 
     m2_vals = m2p_vals
     m2_vecs = np.dot(e2_vecs, m2p_vecs)

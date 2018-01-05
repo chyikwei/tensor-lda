@@ -175,11 +175,13 @@ def test_cooccurrence_expectation():
     e2, ignored_cnt = cooccurrence_expectation(
         doc_word_mtx, min_words=min_count)
 
+    e2_dense = e2.toarray()
     assert_greater(ignored_cnt, 0)
     assert_equal(mask.sum(), n_samples - ignored_cnt)
-    assert_array_almost_equal(result, e2.toarray())
+    assert_array_almost_equal(result, e2_dense)
     # cooccurrence should be symmertic
-    assert_array_almost_equal(result, e2.toarray().T)
+    assert_array_almost_equal(result, e2_dense.T)
+    assert_true(np.all(e2_dense >= 0.))
 
 
 def test_second_order_moments():
@@ -202,7 +204,12 @@ def test_second_order_moments():
     m2 = (alpha0 + 1.) * e2.toarray()
     m2 -= (alpha0 * m1) * m1[:, np.newaxis]
     m2_vals_true, m2_vecs_true = sp.linalg.eigsh(m2, k=n_components)
+    m2_vecs_true, m2_vals_true, m2_vec_t = sp.linalg.svds(
+        e2, k=n_components, which='LM', return_singular_vectors=True)
 
+    assert_array_almost_equal(m2_vecs_true, m2_vec_t.T)
+
+    assert_true(np.all(m2_vals_true > 0.))
     # create M2 eigen values & vectors with optimized method
     m2_vals, m2_vecs = second_order_moments(n_components, e2, m1, alpha0)
 
@@ -216,7 +223,7 @@ def test_second_order_moments():
     m2_reconstruct = np.dot(np.dot(m2_vecs, np.diag(m2_vals)), m2_vecs.T)
 
     # compare reconstructed version
-    assert_array_almost_equal(m2_reconstruct_true, m2_reconstruct)
+    assert_array_almost_equal(m2_reconstruct_true, m2_reconstruct, decimal=4)
 
     # compare original M2 with reconstructed version
     assert_array_almost_equal(m2, m2_reconstruct, decimal=4)

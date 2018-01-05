@@ -137,6 +137,7 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         e2, _ = cooccurrence_expectation(X, 3, batch_size=1000)
         m2_vals, m2_vecs = second_order_moments(
             n_components, e2, m1, alpha0)
+
         # whitening matrix
         w_matrix = whitening(m2_vals, m2_vecs)
         uw_matrix = unwhitening(m2_vals, m2_vecs)
@@ -144,12 +145,14 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         # 3rd order moments
         m3 = third_order_monents(X, w_matrix, m1, alpha0)
 
+        # ALS decomposition
         e_vals, e_vecs, _, _ = cp_als(m3, n_components,
                                       n_restart=self.n_restart,
                                       n_iter=self.max_iter,
                                       tol=self.converge_tol,
                                       random_state=self.random_state_)
-        self.components_ = np.dot(uw_matrix, e_vecs) * e_vals
+        # unwhitening
+        self.components_ = (np.dot(uw_matrix, e_vecs) * e_vals).T
         self.alpha_ = alpha0 * np.power(e_vals, -2)
 
     def transform(self, X):
