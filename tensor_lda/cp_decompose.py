@@ -29,7 +29,7 @@ def _check_3d_tensor(tensor, n_dim):
 def _als_iteration(tensor, b, c):
     """One ALS iteration"""
 
-    temp1 = np.dot(tensor, khatri_rao_prod(b, c))
+    temp1 = np.dot(tensor, khatri_rao_prod(c, b))
     temp2 = LA.pinv(np.dot(c.T, c) * np.dot(b.T, b))
     a_update = np.dot(temp1, temp2)
 

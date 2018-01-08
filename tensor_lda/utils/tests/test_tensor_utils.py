@@ -1,5 +1,6 @@
 import numpy as np
 
+from itertools import permutations
 from numpy.linalg import pinv
 
 from sklearn.externals.six.moves import xrange
@@ -52,6 +53,22 @@ def test_create_3d_rank_1_tensor_simple():
 
     tensor = rank_1_tensor_3d(a, b, c)
     assert_array_equal(result, tensor)
+
+
+def test_create_3d_rank_1_tensor_symmetric():
+    rng = np.random.RandomState(0)
+    dim = rng.randint(20, 40)
+    v = rng.rand(dim)
+    tensor = rank_1_tensor_3d(v, v, v)
+
+    for i in xrange(dim):
+        for j in xrange(i, dim):
+            for k in xrange(j, dim):
+                true_val = v[i] * v[j] * v[k]
+                # check all permutation have same values
+                for perm in permutations([i, j, k]):
+                    tensor_val = tensor[perm[0], (dim * perm[2]) + perm[1]]
+                    assert_almost_equal(true_val, tensor_val)
 
 
 def test_create_3d_rank_1_tensor_random():
