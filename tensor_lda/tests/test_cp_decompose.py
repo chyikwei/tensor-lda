@@ -33,8 +33,8 @@ def test_cp_als():
     lambdas, a, b, c = cp_als(tensor, dim, 100, 1000, 1e-8, rng)
     lambda_order = np.argsort(lambdas)
 
-    print consts
-    print lambdas[lambda_order]
+    #print consts
+    #print lambdas[lambda_order]
     assert_equal(dim, len(lambdas))
     assert_equal((dim, dim), a.shape)
     assert_equal((dim, dim), b.shape)
