@@ -23,7 +23,7 @@ from .moments import (first_order_moments,
                       whitening,
                       unwhitening)
 
-from .cp_decompose import cp_als
+from .cp_decompose import cp_tensor_power_method
 
 
 class TensorLDA(BaseEstimator, TransformerMixin):
@@ -146,17 +146,14 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         m3 = third_order_monents(X, w_matrix, m1, alpha0)
 
         # ALS decomposition
-        e_vals, e_vecs, e_vecs_2, e_vecs_3 = cp_als(m3, n_components,
-                                      n_restart=self.n_restart,
-                                      n_iter=self.max_iter,
-                                      tol=self.converge_tol,
-                                      random_state=self.random_state_)
+        e_vals, e_vecs = cp_tensor_power_method(m3, n_components,
+                                                n_restart=self.n_restart,
+                                                n_iter=self.max_iter,
+                                                random_state=self.random_state_)
         # unwhitening
         self.cp_results_ = {
             'e_vals': e_vals,
             'e_vecs': e_vecs,
-            'e_vecs_2': e_vecs_2,
-            'e_vecs_3': e_vecs_3
         }
         self.components_ = (np.dot(uw_matrix, e_vecs) * e_vals).T
         self.alpha_ = alpha0 * np.power(e_vals, -2)
