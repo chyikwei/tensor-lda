@@ -7,8 +7,8 @@ from numpy import linalg as LA
 from sklearn.externals.six.moves import xrange
 from sklearn.utils import check_random_state
 
-from .utils.tensor_utils import khatri_rao_prod
-
+from .utils.tensor_utils import (khatri_rao_prod,
+                                 rank_1_tensor_3d)
 
 def _check_3d_tensor(tensor, n_dim):
     
@@ -45,7 +45,7 @@ def tensor_reconstruct(lambdas, a, b, c):
 
 
 def cp_als(tensor, n_component, n_restart, n_iter, tol, random_state):
-    """Cp decomposition for symmertic 3-D tensor with ALS
+    """CP Decomposition with ALS
 
     CP decomposition with Alternating least square (ALS) method.
     The method assume the tensor can be composed by sum of 
@@ -54,8 +54,7 @@ def cp_als(tensor, n_component, n_restart, n_iter, tol, random_state):
     Parameters
     ----------
     tensor : array, (k, k * k)
-        Tensor to be decomposed with unfolded
-        format.
+        Symmetric Tensor to be decomposed with unfolded format.
 
     n_component: int
         Number of components
@@ -135,3 +134,69 @@ def cp_als(tensor, n_component, n_restart, n_iter, tol, random_state):
                 break
 
     return (best_lambdas, best_a, best_b, best_c)
+
+
+def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state):
+    """CP Decomposition with Robust Tensor Power Method
+
+    Parameters
+    ----------
+    tensor : array, (k, k * k)
+        Symmetric Tensor to be decomposed with unfolded format.
+
+    n_component: int
+        Number of components
+
+    n_restart: int
+        Number of ALS restarts
+
+    n_iter: int
+        Number of iterations for tensor power method
+
+    random_state: int, RandomState instance or None, optional, default = None
+        If int, random_state is the seed used by the random number generator;
+        If RandomState instance, random_state is the random number generator;
+        If None, the random number generator is the RandomState instance used
+        by `np.random`.
+
+    Returns
+    -------
+    lambdas: array, (k,)
+        eigen values for the tensor
+
+    vectors: array, (k, k)
+        eigen vectors for the tensor. (`vectors[:,i]` map to `lambdas[i]`)
+
+    """
+    _check_3d_tensor(tensor, n_component)
+    random_state = check_random_state(random_state)
+
+    tensor_c = tensor.copy()
+    lambdas = np.empty(n_component)
+    vectors = np.empty((n_component, n_component))
+
+    for t in xrange(n_component):
+        best_lambda = 0.
+        best_v = None
+        for _ in xrange(n_restart):
+            v = random_state.randn(n_component)
+            v /= LA.norm(v)
+            for _ in xrange(n_iter):
+                # compute T(I,v,v) and normalize it
+                v_outer = (v * v[:, np.newaxis]).ravel()
+                v = (tensor_c * v_outer).sum(axis=1)
+                v /= LA.norm(v)
+
+            # compute T(v,v,v)
+            v_outer = (v * v[:, np.newaxis]).ravel()
+            new_lambda = np.dot(v, (tensor_c * v_outer).sum(axis=1))
+
+            if new_lambda > best_lambda:
+                best_lambda = new_lambda
+                best_v = v
+        lambdas[t] = best_lambda
+        vectors[:, t] = best_v
+
+        # deflat
+        tensor_c -= (best_lambda * rank_1_tensor_3d(best_v, best_v, best_v))
+    return lambdas, vectors
