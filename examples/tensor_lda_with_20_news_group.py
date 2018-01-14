@@ -1,6 +1,18 @@
 """
-Copy from sklearn examples
+================================
+Topic extraction with Tensor LDA
+================================
+
+This example is modified from "Topic extraction with Non-negative Matrix
+Factorization and Latent Dirichlet Allocation" example.
+
+This example applies :class:`tensor_lda.tensor_lda.TensorLDA`
+on the 20 news group dataset and the output is a list of topics, each
+represented as a list of terms (weights are not shown).
+
+
 """
+
 from __future__ import print_function
 from time import time
 
@@ -17,7 +29,8 @@ n_top_words = 10
 
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
-        message = "Topic #%d: " % topic_idx
+        topic_prior = model.alpha_[topic_idx]
+        message = "Topic #%d (prior: %.3f): " % (topic_idx, topic_prior)
         message += " ".join([feature_names[i]
                              for i in topic.argsort()[:-n_top_words - 1:-1]])
         print(message)
