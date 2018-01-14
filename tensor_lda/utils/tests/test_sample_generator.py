@@ -27,9 +27,12 @@ def test_lda_sample_generator():
                              random_state=0)
 
     docs_distr, doc_word_mtx = gen.generate_documents(n_doc)
+    topic_word_distr = gen.topic_word_distr_
+
     # check shape
     assert_equal((n_doc, n_topics), docs_distr.shape)
     assert_equal((n_doc, n_words), doc_word_mtx.shape)
+    assert_equal((n_topics, n_words), topic_word_distr.shape)
 
     # check word count
     word_cnts = doc_word_mtx.sum(axis=1)
@@ -42,10 +45,8 @@ def test_lda_sample_generator():
     doc_dirichelet_mean = gen.doc_topic_prior_ / float(gen.doc_topic_prior_.sum())
     assert_array_almost_equal(doc_dirichelet_mean, docs_distr.mean(axis=0), decimal=3)
 
-    # check topic distr
-    topic_distr = gen.topic_word_distr_
-    assert_equal((n_topics, n_words), topic_distr.shape)
-    assert_array_almost_equal(np.ones(n_topics), topic_distr.sum(axis=1))
+    # check topic-word distr
+    assert_array_almost_equal(np.ones(n_topics), topic_word_distr.sum(axis=1))
     word_dirichelet_mean = gen.topic_word_prior_ / float(gen.topic_word_prior_.sum())
     # set decimal to 2 since variance is large
-    assert_array_almost_equal(word_dirichelet_mean, topic_distr.mean(axis=0), decimal=2)
+    assert_array_almost_equal(word_dirichelet_mean, topic_word_distr.mean(axis=0), decimal=2)

@@ -136,7 +136,7 @@ def cp_als(tensor, n_component, n_restart, n_iter, tol, random_state):
     return (best_lambdas, best_a, best_b, best_c)
 
 
-def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state):
+def cp_tensor_power_method(tensor, n_component, n_restart, max_iter, random_state):
     """CP Decomposition with Robust Tensor Power Method
 
     Parameters
@@ -144,13 +144,13 @@ def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state)
     tensor : array, (k, k * k)
         Symmetric Tensor to be decomposed with unfolded format.
 
-    n_component: int
+    n_component : int
         Number of components
 
-    n_restart: int
+    n_restart : int
         Number of ALS restarts
 
-    n_iter: int
+    max_iter : int
         Number of iterations for tensor power method
 
     random_state: int, RandomState instance or None, optional, default = None
@@ -161,11 +161,14 @@ def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state)
 
     Returns
     -------
-    lambdas: array, (k,)
+    lambdas : array, (k,)
         eigen values for the tensor
 
-    vectors: array, (k, k)
+    vectors : array, (k, k)
         eigen vectors for the tensor. (`vectors[:,i]` map to `lambdas[i]`)
+
+    total_iters : int
+        Total number of iterations
 
     """
     _check_3d_tensor(tensor, n_component)
@@ -178,20 +181,21 @@ def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state)
     for t in xrange(n_component):
         best_lambda = 0.
         best_v = None
+        total_iters = 0
         for _ in xrange(n_restart):
             v = random_state.randn(n_component)
             v /= LA.norm(v)
-            for _ in xrange(n_iter):
+            for _ in xrange(max_iter):
                 # compute T(I,v,v) and normalize it
                 v_outer = (v * v[:, np.newaxis]).ravel()
                 v = (tensor_c * v_outer).sum(axis=1)
                 v /= LA.norm(v)
-
+                total_iters += 1
             # compute T(v,v,v)
             v_outer = (v * v[:, np.newaxis]).ravel()
             new_lambda = np.dot(v, (tensor_c * v_outer).sum(axis=1))
 
-            if new_lambda > best_lambda:
+            if best_v is None or new_lambda > best_lambda:
                 best_lambda = new_lambda
                 best_v = v
         lambdas[t] = best_lambda
@@ -199,4 +203,4 @@ def cp_tensor_power_method(tensor, n_component, n_restart, n_iter, random_state)
 
         # deflat
         tensor_c -= (best_lambda * rank_1_tensor_3d(best_v, best_v, best_v))
-    return lambdas, vectors
+    return lambdas, vectors, total_iters

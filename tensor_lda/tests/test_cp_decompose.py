@@ -1,7 +1,7 @@
 import numpy as np
 
 from sklearn.utils.testing import assert_equal
-from sklearn.utils.testing import assert_array_equal
+from sklearn.utils.testing import assert_greater_equal
 from sklearn.utils.testing import assert_array_almost_equal
 from sklearn.utils.testing import assert_almost_equal
 from sklearn.utils.testing import assert_raises_regexp
@@ -94,7 +94,8 @@ def test_cp_tensor_power_method():
     tensor = _create_symmertic_tensor(consts, vectors, rng)
 
     # running als decompose
-    lambdas, decompose_vecs = cp_tensor_power_method(tensor, dim, 10, 100, rng)
+    lambdas, decompose_vecs, n_iter = cp_tensor_power_method(tensor, dim, 10, 100, rng)
+    assert_greater_equal(n_iter, 1)
     lambda_order = np.argsort(lambdas)
 
     #print consts

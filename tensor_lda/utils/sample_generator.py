@@ -60,7 +60,8 @@ class LdaSampleGenerator(object):
         self.doc_topic_prior_ = np.repeat(self.doc_topic_prior, n_topics)
         self.topic_word_distr_ = self.random_state_.dirichlet(
             self.topic_word_prior_, n_topics)
-
+        
+        
     def generate_documents(self, n_docs):
         """Generate Random doc-words Matrix
 
