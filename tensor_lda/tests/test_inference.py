@@ -16,7 +16,7 @@ def test_doc_likelihood():
     min_words = 3
     doc_topic_prior = 1.
     topic_word_prior = 1.
-    n_doc = rng.randint(500, 1000)
+    n_doc = rng.randint(100, 200)
 
     gen = LdaSampleGenerator(n_topics=n_topics, n_words=n_words,
                              min_doc_size=min_words,
@@ -45,7 +45,7 @@ def test_lda_inference_gd():
     min_words = 3
     doc_topic_prior = 1.
     topic_word_prior = 1.
-    n_doc = rng.randint(500, 1000)
+    n_doc = rng.randint(100, 200)
 
     gen = LdaSampleGenerator(n_topics=n_topics, n_words=n_words,
                              min_doc_size=min_words,

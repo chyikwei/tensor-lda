@@ -57,7 +57,7 @@ def test_create_3d_rank_1_tensor_simple():
 
 def test_create_3d_rank_1_tensor_symmetric():
     rng = np.random.RandomState(0)
-    dim = rng.randint(20, 40)
+    dim = rng.randint(20, 25)
     v = rng.rand(dim)
     tensor = rank_1_tensor_3d(v, v, v)
 
@@ -75,7 +75,7 @@ def test_create_3d_rank_1_tensor_random():
     # test create_3d_rank_1_tensor with random values
     rng = np.random.RandomState(0)
 
-    dim = rng.randint(20, 40)
+    dim = rng.randint(20, 25)
     a = rng.rand(dim)
     b = rng.rand(dim)
     c = rng.rand(dim)
@@ -162,9 +162,9 @@ def test_khatri_rao_properties():
 def test_tensor_3d_permute():
     rng = np.random.RandomState(0)
 
-    dim1 = rng.randint(20, 50)
-    dim2 = rng.randint(20, 50)
-    dim3 = rng.randint(20, 50)
+    dim1 = rng.randint(10, 20)
+    dim2 = rng.randint(10, 20)
+    dim3 = rng.randint(10, 20)
 
     tensor = rng.rand(dim1, (dim2 * dim3))
 
@@ -198,9 +198,9 @@ def test_tensor_3d_permute():
 def test_tensor_3d_from_matrix_vector():
     rng = np.random.RandomState(0)
 
-    dim1 = rng.randint(20, 30)
-    dim2 = rng.randint(20, 30)
-    dim3 = rng.randint(20, 30)
+    dim1 = rng.randint(10, 20)
+    dim2 = rng.randint(10, 20)
+    dim3 = rng.randint(10, 20)
 
     mtx = rng.rand(dim1, dim2)
     vector = rng.rand(dim3)
@@ -217,9 +217,9 @@ def test_tensor_3d_from_matrix_vector():
 def test_tensor_3d_from_vector_matrix():
     rng = np.random.RandomState(3)
 
-    dim1 = rng.randint(20, 30)
-    dim2 = rng.randint(20, 30)
-    dim3 = rng.randint(20, 30)
+    dim1 = rng.randint(10, 20)
+    dim2 = rng.randint(10, 20)
+    dim3 = rng.randint(10, 20)
 
     vector = rng.rand(dim1)
     mtx = rng.rand(dim2, dim3)

@@ -29,7 +29,7 @@ def tensor_3d_permute_231(np.ndarray[ndim=2, dtype=np.float64_t, mode="c"] tenso
 
     """
 
-    cdef np.ndarray[ndim=2, dtype=np.float64_t] tensor_permuted
+    cdef np.ndarray[ndim=2, dtype=np.float64_t] permuted_tensor
     cdef np.npy_intp i, j, k, n
 
     n = tensor.shape[0]
@@ -67,7 +67,7 @@ def tensor_3d_permute_312(np.ndarray[ndim=2, dtype=np.float64_t, mode="c"] tenso
 
     """
 
-    cdef np.ndarray[ndim=2, dtype=np.float64_t] tensor_permuted
+    cdef np.ndarray[ndim=2, dtype=np.float64_t] permuted_tensor
     cdef np.npy_intp i, j, k, n
 
     n = tensor.shape[0]

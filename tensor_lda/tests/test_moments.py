@@ -99,7 +99,7 @@ def test_first_order_moments_with_ignored_count():
     rng = np.random.RandomState(0)
 
     n_features = 10
-    n_samples = rng.randint(2000, 4000)
+    n_samples = rng.randint(1000, 2000)
     doc_word_mtx = rng.randint(0, 3, size=(n_samples, n_features))
 
     word_cnts = doc_word_mtx.sum(axis=1).astype('float')
