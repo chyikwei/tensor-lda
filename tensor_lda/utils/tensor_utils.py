@@ -204,9 +204,6 @@ def tensor_3d_permute(tensor, tensor_shape, a, b, c):
                 old_idx[a_idx] = i
                 old_idx[b_idx] = j
                 old_idx[c_idx] = k
-                assert old_idx[0] < tensor_shape[0]
-                assert old_idx[1] < tensor_shape[1]
-                assert old_idx[2] < tensor_shape[2]
                 old_val = tensor[old_idx[0], (n_col * old_idx[2]) + old_idx[1]]
                 # new index
                 permuted_tensor[i, (dim2 * k) + j] = old_val
@@ -276,7 +273,7 @@ def tensor_3d_prod(tensor, a, b, c):
     t_bc = np.empty((n1, n, p))
     for i in xrange(n1):
         # (n, p) = (n, n2) * (n2, p)
-        t_bc[i , :, :] = np.dot(b.T, t_c[i, :, :])
+        t_bc[i, :, :] = np.dot(b.T, t_c[i, :, :])
 
     t_abc = np.empty((m, n, p))
     for i in xrange(p):

@@ -81,7 +81,7 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         Brett W. Bader, 2009
     """
 
-    def __init__(self, n_components=10, alpha0=.1, max_iter=1000,
+    def __init__(self, n_components=10, alpha0=0.1, max_iter=1000,
                  max_inference_iter=1000, n_restart=10,
                  converge_tol=1e-4, inference_converge_tol=1e-6,
                  inference_step_size=1e-3, verbose=0,
