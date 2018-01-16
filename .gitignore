@@ -89,4 +89,8 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# Sphinx documentation
+doc/_build/
+doc/auto_examples/
+
 .DS_Store

@@ -9,13 +9,12 @@ import scipy.sparse as sp
 
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.externals.six.moves import xrange
-from sklearn.utils import check_array
-from sklearn.utils.validation import check_non_negative
 
 from .utils.tensor_utils import (rank_1_tensor_3d,
                                  tensor_3d_from_vector_matrix,
-                                 tensor_3d_from_matrix_vector,
-                                 tensor_3d_permute)
+                                 tensor_3d_from_matrix_vector)
+from .utils.fast_tensor_ops import (tensor_3d_permute_231,
+                                    tensor_3d_permute_312)
 
 
 def first_order_moments(X, min_words=3):
@@ -366,9 +365,8 @@ def whitening_triples_expectation(X, min_words, whitening_matrix):
         # eq (10)
         w_t_diag_w = np.dot(np.multiply(w.T, cnts), w)
         a2 = tensor_3d_from_vector_matrix(w_c, w_t_diag_w)
-        tensor_shape = (n_components, n_components, n_components)
-        a2_3_1_2 = tensor_3d_permute(a2, tensor_shape, 3, 1, 2)
-        a2_2_3_1 = tensor_3d_permute(a2, tensor_shape, 2, 3, 1)
+        a2_3_1_2 = tensor_3d_permute_312(a2)
+        a2_2_3_1 = tensor_3d_permute_231(a2)
         e3 += (rho * (a1 - a2 - a2_3_1_2 - a2_2_3_1))
 
         # coef in eq (11)
@@ -407,9 +405,6 @@ def whitening_tensor_e2_m1(whitened_m1, alpha0):
         eigen values of sencond-order moments
 
     """
-    n_components = whitened_m1.shape[0]
-    tensor_shape = (n_components, n_components, n_components)
-
     # U1, U2, U3. eq (13) to (15)
     w_t_e2_w = alpha0 * (whitened_m1[np.newaxis, :] * 
                          whitened_m1[:, np.newaxis])
@@ -419,9 +414,9 @@ def whitening_tensor_e2_m1(whitened_m1, alpha0):
     u1 = tensor_3d_from_matrix_vector(w_t_e2_w, whitened_m1)
     u1_2_3 = u1.copy()
     # add U2
-    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 3, 1, 2)
+    u1_2_3 += tensor_3d_permute_312(u1)
     # add U3
-    u1_2_3 += tensor_3d_permute(u1, tensor_shape, 2, 3, 1)
+    u1_2_3 += tensor_3d_permute_231(u1)
     return u1_2_3
 
 
