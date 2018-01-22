@@ -1,4 +1,4 @@
-"""Generate samples dataset
+"""Simulate the generative process of LDA and generate corpus based on it
 """
 
 import numpy as np
@@ -35,10 +35,11 @@ class LdaSampleGenerator(object):
     mean_doc_size: int
         Mean Value if word count in each document
 
+
     Attributes
     ----------
     topic_word_distr_ : array, [n_topics, n_words]
-        parameters for topic word distribution.
+       Topic word distribution.
 
     """
 

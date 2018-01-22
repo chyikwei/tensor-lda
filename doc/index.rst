@@ -4,18 +4,19 @@
    contain the root `toctree` directive.
 
 Welcome to tensor-lda's documentation!
-============================================
+======================================
 
 WIP
 
     .. toctree::
-       :maxdepth: 2
+       :maxdepth: 3
        
+       introduction
        api
        auto_examples/index
-       ...
 
-See the `README <https://github.com/vighneshbirodkar/project-template/blob/master/README.md>`_
+
+See the `README <https://github.com/chyikwei/tensor-lda/blob/master/README.md>`_
 for more information.
 
 
@@ -25,4 +26,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 

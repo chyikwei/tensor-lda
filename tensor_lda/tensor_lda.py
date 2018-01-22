@@ -1,6 +1,4 @@
-"""Latent Dirichlet Allocation with tesnsor Decomposition
-
-TODO: add short desc
+"""Latent Dirichlet Allocation with Tesnsor Decomposition
 """
 
 # Author: Chyi-Kwei Yau
@@ -55,10 +53,11 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         If RandomState instance, random_state is the random number generator;
         If None, the random number generator is the RandomState instance used
         by `np.random`.
-    
+
+
     Attributes
     ----------
-    n_components_ : int, (default=min(10, n_features))
+    n_components_ : int
         The effective number of components. The number must be smaller or equal
         to the number of features.
 

@@ -59,22 +59,22 @@ def _check_square_matrix(matrix):
 
 
 def rank_1_tensor_3d(a, b, c):
-    """Create rank one 3-D tensor from vectors
+    """Generate a 3-D tensor from 3 1-D vectors
 
-    Create unfolded 3D tensor from 3 rank one
-    vectors `a`, `b`, and `c`. The return value
-    is an unfolded 3D tensor.
+    Generate a 3D tensor from 3 rank one vectors 
+    `a`, `b`, and `c`. The returned 3-D tensor is
+    in unfolded format.
 
     Parameters
     ----------
-    a : array, (n,)
-        rank one vector
+    a : array, shape (n,)
+        first rank one vector
 
-    b :  array, (n,)
-        rank one vector
+    b : array, shape (n,)
+        second rank one vector
 
-    c :  array, (n,)
-        rank one vector
+    c : array, shape (n,)
+        thrid rank one vector
     
     Returns
     -------
@@ -99,24 +99,25 @@ def rank_1_tensor_3d(a, b, c):
 
 
 def tensor_3d_from_vector_matrix(a, b):
-    """Create 3-D tensor from vector and matrix
+    """Generate 3-D tensor from 1-D vector and 2-D matrix
 
-    Create unfolded 3D tensor from vectors `a`
-    and matrix `b`. The return value is an unfolded
-    3D tensor.
+    Generate a 3D tensor from a 1-D vector `a` and 2-D
+    matrix `b`. The returned 3-D tensor is
+    in unfolded format.
     
     Parameters
     ----------
-    a : array, (m,)
-        rank one vector
+    a : array, shape (m,)
+        1-D vector
 
-    b :  array, (n, p)
+    b : 2-D array, shape (n, p)
         2-D matrix
 
     Returns
     -------
     tensor:  array, (m, n * p)
         3D tensor in unfolded format.
+
     """
     a = _check_1d_vector(a)
     tensor = a[:, np.newaxis] * b.ravel(order='F')[np.newaxis, :]
@@ -124,24 +125,25 @@ def tensor_3d_from_vector_matrix(a, b):
 
 
 def tensor_3d_from_matrix_vector(b, a):
-    """Create 3-D tensor from vector and matrix
+    """Generate 3-D tensor from 2-D matrix and 1-D vector
 
-    Create unfolded 3D tensor from vectors `a`
-    and matrix `b`. The return value is an unfolded
-    3D tensor.
-    
+    This function is similar to `tensor_3d_from_vector_matrix`
+    function. The only difference is the first argument is 2-D
+    matrix and the second element is 1-D vector.
+
     Parameters
     ----------
-    b :  array, (m, n)
+    b : array, shape (m, n)
         2-D matrix
 
-    a : array, (p,)
+    a : array, shape (p,)
         vector
 
     Returns
     -------
-    tensor:  array, (m, n * p)
+    tensor : array, shape (m, n * p)
         3D tensor in unfolded format.
+
     """
     len_a = a.shape[0]
     n_col = b.shape[1]
@@ -156,31 +158,32 @@ def tensor_3d_from_matrix_vector(b, a):
 def tensor_3d_permute(tensor, tensor_shape, a, b, c):
     """Permute the mode of a 3-D tensor
     
-    This is a slow version to caluclate 3-D tensor
-    permutation
+    This is a slow implementation to generate 3-D tensor
+    permutations.
 
     Parameters
     ----------
-    tensor :  array, (n, m * k)
+    tensor : 2D array, shape (n, m * k)
         3D tensor in unfolded format
 
-    tensor_shape : integer triple
+    tensor_shape : int triple
         Shape of the tensor. Since tensor is in
         unfolded format. We need it's real format
         to calculate permutation.
 
-    a : integer, 1, 2 or 3
+    a : int, {1, 2, 3}
         new first index
+    }
 
-    b : integer, 1, 2 or 3
+    b : int, {1, 2, 3}
         new second index
 
-    c : integer, 1, 2 or 3
+    c : int, {1, 2, 3}
         new thrid order index
 
     Return
     ------
-    permuted_tensor: array
+    permuted_tensor:  2D array
         Permuted tensor, element (i_1, i_2, i_3) in
         the permuted tensor will be element
         (i_a, i_b, i_c) in the original tensor
@@ -197,10 +200,10 @@ def tensor_3d_permute(tensor, tensor_shape, a, b, c):
     dim3 = tensor_shape[c_idx]
 
     permuted_tensor = np.empty((dim1, dim2 * dim3))
+    old_idx = np.zeros(3).astype('int32')
     for i in xrange(dim1):
         for j in xrange(dim2):
             for k in xrange(dim3):
-                old_idx = [0, 0, 0]
                 old_idx[a_idx] = i
                 old_idx[b_idx] = j
                 old_idx[c_idx] = k
@@ -212,20 +215,22 @@ def tensor_3d_permute(tensor, tensor_shape, a, b, c):
 
 
 def khatri_rao_prod(a, b):
-    """Calculate Khatri-Rao product
+    """Khatri-Rao product
+    
+    Generate Khatri-Rao product from 2 2-D matrix.
 
     Parameters
     ----------
-    a : array, (n, k)
-        rank one vector
+    a : 2D array, shape (n, k)
+        first matrix
 
-    b :  array, (m, k)
-        rank one vector
+    b : 2D array, shape (m, k)
+        second matrix
 
     Returns
     -------
-    matrix:  array, (n * m, k)
-        Khatri-Rao product
+    matrix : 2D array, shape (n * m, k)
+        Khatri-Rao product of `a` and `b`
     """
 
     a_row, a_col = a.shape
@@ -242,10 +247,12 @@ def khatri_rao_prod(a, b):
 
 def tensor_3d_prod(tensor, a, b, c):
     """Calculate product of 3D tensor with matrix on each dimension
+        
+    TODO: move it to test
 
     Parameters
     ----------
-    tensor : array, (n1, n2, n3)
+    tensor : 3D array, shape (n1, n2, n3)
     a : array, (n1, m)
 
     b :  array, (n2, n)
@@ -262,10 +269,6 @@ def tensor_3d_prod(tensor, a, b, c):
     n1_, m = a.shape
     n2_, n = b.shape
     n3_, p = c.shape
-
-    assert n1 == n1_
-    assert n2 == n2_
-    assert n3 == n3_
 
     # (n1, n2, p)
     t_c = np.dot(tensor, c)

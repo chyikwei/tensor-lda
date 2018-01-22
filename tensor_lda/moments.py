@@ -1,3 +1,6 @@
+"""Generate moments from documents
+"""
+
 from __future__ import print_function
 
 
@@ -20,7 +23,7 @@ from .utils.fast_tensor_ops import (tensor_3d_permute_231,
 def first_order_moments(X, min_words=3):
     """First-Order Moments
     
-    First order Moment of document-word frequency matrix.
+    Generate first order Moment of document-word frequency matrix.
 
     Parameters
     ----------

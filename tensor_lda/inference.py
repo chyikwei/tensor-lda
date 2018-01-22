@@ -1,3 +1,6 @@
+"""Inference Document Topic Distribution
+"""
+
 import numpy as np
 import scipy.sparse as sp
 
@@ -7,7 +10,7 @@ from sklearn.externals.six.moves import xrange
 EPS = np.finfo(np.float).eps
 
 
-def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7):
+def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7, smooth=1e-3):
     """LDA Inference with Grandient Descent
     
     This will maximize log(P(theta | X, alpha, beta)).
@@ -75,6 +78,8 @@ def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7):
             log_theta_d = np.log(theta_d + EPS) + (step_size * grad)
             logsum_theta_d = logsumexp(log_theta_d)
             theta_d = np.exp(log_theta_d - logsum_theta_d)
+            theta_d += smooth
+            theta_d /= theta_d.sum()
             if np.abs(theta_d - theta_d_old).mean() < tol:
                 break
         doc_topic_distr[idx_d] = theta_d

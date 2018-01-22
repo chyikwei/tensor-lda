@@ -3,8 +3,9 @@
 Topic extraction with Tensor LDA
 ================================
 
-This example is modified from "Topic extraction with Non-negative Matrix
-Factorization and Latent Dirichlet Allocation" example.
+This example is modified from scikit-learn's "Topic extraction with
+Non-negative Matrix Factorization and Latent Dirichlet Allocation"
+example.
 
 This example applies :class:`tensor_lda.tensor_lda.TensorLDA`
 on the 20 news group dataset and the output is a list of topics, each
@@ -21,9 +22,9 @@ from sklearn.datasets import fetch_20newsgroups
 
 from tensor_lda.tensor_lda import TensorLDA
 
-n_samples = 5000
+n_samples = 10000
 n_features = 1000
-n_components = 20
+n_components = 40
 n_top_words = 10
 
 
@@ -63,7 +64,7 @@ print("Fitting TensorLDA models with tf features, "
       "n_samples=%d and n_features=%d..."
       % (n_samples, n_features))
 
-lda = TensorLDA(n_components=n_components, alpha0=10.)
+lda = TensorLDA(n_components=n_components, alpha0=.1)
 
 t0 = time()
 lda.fit(tf)
@@ -72,3 +73,7 @@ print("done in %0.3fs." % (time() - t0))
 print("\nTopics in LDA model:")
 tf_feature_names = tf_vectorizer.get_feature_names()
 print_top_words(lda, tf_feature_names, n_top_words)
+
+doc_topics = lda.transform(tf[0:2, :])
+print(doc_topics[0, :])
+print(data_samples[0])
