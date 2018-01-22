@@ -287,7 +287,14 @@ texinfo_documents = [
 def generate_example_rst(app, what, name, obj, options, lines):
     # generate empty examples files, so that we don't get
     # inclusion errors if there are no examples for a class / module
-    examples_path = os.path.join(app.srcdir, "modules", "generated",
+    module_dir = os.path.join(app.srcdir, "modules")
+    if not os.path.exists(module_dir):
+        os.mkdir(module_dir)
+    generated_dir = os.path.join(module_dir, "generated")
+    if not os.path.exists(generated_dir):
+        os.mkdir(generated_dir)
+
+    examples_path = os.path.join(generated_dir,
                                  "%s.examples" % name)
     if not os.path.exists(examples_path):
         # touch file

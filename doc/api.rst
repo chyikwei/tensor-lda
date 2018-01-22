@@ -4,14 +4,14 @@ API Reference
 TensorLDA
 ---------
 
-.. automodule:: tensor_lda.tensor_lda
+.. autoclass:: tensor_lda.tensor_lda.TensorLDA
    :members:
 
 
 LDA Sample Generator
 --------------------
 
-.. automodule:: tensor_lda.utils.sample_generator
+.. autoclass:: tensor_lda.utils.sample_generator.LdaSampleGenerator
    :members:
 
 
