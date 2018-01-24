@@ -31,6 +31,10 @@ extensions = [
     Extension("tensor_lda.utils.fast_tensor_ops",
               ["tensor_lda/utils/fast_tensor_ops.pyx"],
               include_dirs=[numpy.get_include()],
+              libraries=libraries),
+    Extension("tensor_lda._inference",
+              ["tensor_lda/_inference.pyx"],
+              include_dirs=[numpy.get_include()],
               libraries=libraries)
 ]
 

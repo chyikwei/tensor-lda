@@ -21,7 +21,7 @@ from .moments import (first_order_moments,
                       unwhitening)
 
 from .cp_decompose import cp_tensor_power_method
-from .inference import lda_inference_gd
+from .inference import lda_inference_vi
 
 
 class TensorLDA(BaseEstimator, TransformerMixin):
@@ -43,7 +43,6 @@ class TensorLDA(BaseEstimator, TransformerMixin):
     
     converge_tol : float, optional (default=1e-4)
         Convergence tolarence in training step.
-
 
     verbose : int, optional (default=0)
         Verbosity level.
@@ -84,6 +83,7 @@ class TensorLDA(BaseEstimator, TransformerMixin):
                  max_inference_iter=1000, n_restart=10,
                  converge_tol=1e-4, inference_converge_tol=1e-6,
                  inference_step_size=1e-3, verbose=0,
+                 smooth_param=0.01,
                  random_state=None):
         self.n_components = n_components
         self.alpha0 = alpha0
@@ -94,6 +94,7 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         self.inference_converge_tol = inference_converge_tol
         self.inference_step_size = inference_step_size
         self.verbose = verbose
+        self.smooth_param = smooth_param
         self.random_state = random_state
 
     def _check_params(self, X):
@@ -202,6 +203,10 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         components = (np.dot(uw_matrix, e_vecs) * e_vals).T
         # set negative part to 0
         components[components < 0.] = 0.
+        # smooth beta
+        components *= (1. - self.smooth_param)
+        components += (self.smooth_param / components.shape[1])
+
         components /= components.sum(axis=1)[:, np.newaxis]
         self.components_ = components
         return self
@@ -224,9 +229,11 @@ class TensorLDA(BaseEstimator, TransformerMixin):
         X = self._check_inference(X, "TensorLDA.transform")
         alpha = self.alpha_
         beta = self.components_
-        max_iter = self.max_inference_iter
+        max_iters = self.max_inference_iter
         tol = self.inference_converge_tol
-        step_size = self.inference_step_size
-        doc_topic_distr = lda_inference_gd(X, alpha, beta,
-                                           max_iter, step_size, tol)
+
+        doc_topic_distr = lda_inference_vi(X, alpha, beta, max_iters, tol)
+        doc_topic_distr /= doc_topic_distr.sum(axis=1)[:, np.newaxis]
+        #doc_topic_distr = lda_inference_gd(X, alpha, beta,
+        #                                   max_iter, step_size, tol)
         return doc_topic_distr

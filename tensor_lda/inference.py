@@ -7,6 +7,9 @@ import scipy.sparse as sp
 from scipy.misc import logsumexp
 from sklearn.externals.six.moves import xrange
 
+from ._inference import (mean_change, _dirichlet_expectation_1d,
+                         _dirichlet_expectation_2d)
+
 EPS = np.finfo(np.float).eps
 
 
@@ -83,6 +86,57 @@ def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7, smooth=
             if np.abs(theta_d - theta_d_old).mean() < tol:
                 break
         doc_topic_distr[idx_d] = theta_d
+    return doc_topic_distr
+
+
+def lda_inference_vi(X, alpha, beta, max_iter, mean_change_tol=1e-6):
+    """LDA Inference with Variational Inference
+    
+    Copy from scikit-learn's LDA
+    """
+    n_doc = X.shape[0]
+    n_components = beta.shape[0]
+    is_sparse_x = sp.issparse(X)
+    doc_topic_distr = np.ones((n_doc, n_components))
+
+    if is_sparse_x:
+        X_data = X.data
+        X_indices = X.indices
+        X_indptr = X.indptr
+    
+    # In the literature, this is `exp(E[log(theta)])`
+    exp_doc_topic = np.exp(_dirichlet_expectation_2d(doc_topic_distr))
+
+    for idx_d in xrange(n_doc):
+        if is_sparse_x:
+            ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+            cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
+        else:
+            ids = np.nonzero(X[idx_d, :])[0]
+            cnts = X[idx_d, ids]
+
+        doc_topic_d = doc_topic_distr[idx_d, :]
+        # The next one is a copy, since the inner loop overwrites it.
+        exp_doc_topic_d = exp_doc_topic[idx_d, :].copy()
+        beta_d = beta[:, ids]
+
+        # Iterate between `doc_topic_d` and `norm_phi` until convergence
+        for _ in xrange(0, max_iter):
+            last_d = doc_topic_d
+
+            # The optimal phi_{dwk} is proportional to
+            # exp(E[log(theta_{dk})]) * exp(E[log(beta_{dw})]).
+            norm_phi = np.dot(exp_doc_topic_d, beta_d) + EPS
+
+            doc_topic_d = (exp_doc_topic_d *
+                           np.dot(cnts / norm_phi, beta_d.T))
+            # Note: adds doc_topic_prior to doc_topic_d, in-place.
+            doc_topic_d += alpha
+            _dirichlet_expectation_1d(doc_topic_d, exp_doc_topic_d)
+
+            if mean_change(last_d, doc_topic_d) < mean_change_tol:
+                break
+        doc_topic_distr[idx_d, :] = doc_topic_d
     return doc_topic_distr
 
 
