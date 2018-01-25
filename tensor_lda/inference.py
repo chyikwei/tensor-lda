@@ -13,7 +13,7 @@ from ._inference import (mean_change, _dirichlet_expectation_1d,
 EPS = np.finfo(np.float).eps
 
 
-def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7, smooth=1e-3):
+def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-6):
     """LDA Inference with Grandient Descent
     
     This will maximize log(P(theta | X, alpha, beta)).
@@ -75,24 +75,48 @@ def lda_inference_gd(X, alpha, beta, max_iter, step_size=1e-3, tol=1e-7, smooth=
             # shape=(len(ids),)
             denom = np.dot(theta_d, beta_d)
             # shape=(k, len(ids))
-            part2 = (beta_d / denom) * cnts
-            grad += part2.sum(axis=1)
-
-            log_theta_d = np.log(theta_d + EPS) + (step_size * grad)
-            logsum_theta_d = logsumexp(log_theta_d)
-            theta_d = np.exp(log_theta_d - logsum_theta_d)
-            theta_d += smooth
+            grad_2 = (beta_d / denom) * cnts
+            grad += grad_2.sum(axis=1)
+            grad *= step_size
+            grad -= grad.max()
+            theta_d *= np.exp(grad)
             theta_d /= theta_d.sum()
-            if np.abs(theta_d - theta_d_old).mean() < tol:
+            if mean_change(theta_d, theta_d_old) < tol:
                 break
         doc_topic_distr[idx_d] = theta_d
     return doc_topic_distr
 
 
-def lda_inference_vi(X, alpha, beta, max_iter, mean_change_tol=1e-6):
+def lda_inference_vi(X, alpha, beta, max_iter, tol=1e-6):
     """LDA Inference with Variational Inference
+
+    This part of code is copied from scikit-learn's
+    `LatentDirichletAllocation` source code.
+
+    Check the source in `url`
+
+    Parameters
+    ----------
+    X : array-like or sparse matrix, shape=(n_samples, n_features)
+        Document word matrix.
+
+    alpha : array-like, shape=(n_topics,)
+        Prior distribution of topics.
+
+    beta : array-like, shape=(n_topics, n_features)
+        Topic word distribution.
+
+    max_iter : int
+        Max Iterations of gradient descent
     
-    Copy from scikit-learn's LDA
+    tol : float, default=1e-7
+        Converge condition
+
+    Returns
+    -------
+    doc_topic_distr : array-like, shape=(n_samples, n_topics)
+        Document topic matrix.
+
     """
     n_doc = X.shape[0]
     n_components = beta.shape[0]
@@ -128,13 +152,12 @@ def lda_inference_vi(X, alpha, beta, max_iter, mean_change_tol=1e-6):
             # exp(E[log(theta_{dk})]) * exp(E[log(beta_{dw})]).
             norm_phi = np.dot(exp_doc_topic_d, beta_d) + EPS
 
-            doc_topic_d = (exp_doc_topic_d *
-                           np.dot(cnts / norm_phi, beta_d.T))
+            doc_topic_d = (exp_doc_topic_d * np.dot(cnts / norm_phi, beta_d.T))
             # Note: adds doc_topic_prior to doc_topic_d, in-place.
             doc_topic_d += alpha
             _dirichlet_expectation_1d(doc_topic_d, exp_doc_topic_d)
 
-            if mean_change(last_d, doc_topic_d) < mean_change_tol:
+            if mean_change(last_d, doc_topic_d) < tol:
                 break
         doc_topic_distr[idx_d, :] = doc_topic_d
     return doc_topic_distr
