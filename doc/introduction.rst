@@ -1,16 +1,35 @@
-==================================================================
+============
 Introduction
-==================================================================
+============
 
-`TensorLDA` implements a tensor based method to estimate parameters in a Latent Dirichlet Allocation(LDA) model. This document will focus on the parameter estimation. For more detais about Latent Dirichlet Allocation model, check scikit-learn's `LatentDirichletAllocation` document.
+`TensorLDA` uses tensor decomposition method to estimate parameters in a Latent Dirichlet Allocation model.
+For an intruduction about how LDA works, check scikit-learn's `LatentDirichletAllocation` document. This document will focus on how to learn LDA parameters by using tensor decomposition method.
 
-Assuming :math:`x_1`, :math:`x_2`, and :math:`x_3` are any triple of words in the same document,
-the first three order data moments :math:`M_1`, :math:`M_2`, and :math:`M_3` are defined as:
+LDA Parameters
+--------------
+
+First, we define LDA parameters:
+
+* :math:`K` : number of topics
+
+* :math:`V` : vocabulary size
+
+* :math:`\alpha_i (i = 1...K)` : dirichlet prior for topic i
+
+* :math:`\alpha_0` : sum of topic priors (:math:`\alpha_0 = \sum_{i=1}^{K} \alpha_i`)
+
+* :math:`\beta_i (i = 1...K)` : word distribution for topic i
+
+In the model we assume :math:`\alpha_0` is given and our goal is to estimate :math:`\alpha_i` and :math:`beta_i` from a given corpus.
+
+Data Moments
+------------
+
+Let :math:`x_1`, :math:`x_2`, and :math:`x_3` be any triple of words in a document, the first three order data moments :math:`M_1`, :math:`M_2`, and :math:`M_3` are defined as:
 
 .. math::
 
   M_1 = & \mathop{\mathbb{E}}[x_1] \\ 
-
 
   M_2 = & \mathop{\mathbb{E}}[x_1 \otimes x_2] - \frac{\alpha_0}{\alpha_0 + 1} M_1 \otimes M_1 \\
 
@@ -23,7 +42,7 @@ the first three order data moments :math:`M_1`, :math:`M_2`, and :math:`M_3` are
         & + \frac{\alpha_0^2}{(\alpha_0 + 2)(\alpha_0 + 1)} M_1 \otimes M_1 \otimes M_1
 
 
-Model Parameter:
+Based on dirichelet priors, we can derive the relationship between data moments and model parameters as:
 
 .. math::
   
@@ -32,14 +51,20 @@ Model Parameter:
   M_3 = & \sum_{i=1}^{k} \alpha_i \beta_i \otimes \beta_i \otimes \beta_i
 
 
-Whitening:
+Whitening
+---------
+
+TODO
 
 .. math::
   
   T = \mathop{\mathbb{E}}[W^\top x_1 \otimes  W^\top x_2 \otimes W^\top x_3]
 
 
-Tensor Decomposition:
+Tensor Decomposition
+--------------------
+
+TODO
 
 
 
