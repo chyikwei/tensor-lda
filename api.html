@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Documentation &mdash; tesnsor-lda 0.1.0 documentation</title>
+  <title>API Reference &mdash; tesnsor-lda 0.1.0 documentation</title>
   
 
   
@@ -39,7 +39,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="tesnsor-lda 0.1.0 documentation" href="index.html"/>
         <link rel="next" title="General examples" href="auto_examples/index.html"/>
-        <link rel="prev" title="Welcome to tensor-lda’s documentation!" href="index.html"/> 
+        <link rel="prev" title="Introduction" href="introduction.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.1
+                0.1.0
               </div>
             
           
@@ -93,7 +93,13 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tensorlda">TensorLDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lda-sample-generator">LDA Sample Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-tensor_lda.utils.tensor_utils">Utilities</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">General examples</a></li>
 </ul>
 
@@ -139,7 +145,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>API Documentation</li>
+      <li>API Reference</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -158,11 +164,402 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="api-documentation">
-<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="template.html"><span class="doc">Template</span></a></li>
-</ul>
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tensorlda">
+<h2>TensorLDA<a class="headerlink" href="#tensorlda" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tensor_lda.tensor_lda.TensorLDA">
+<em class="property">class </em><code class="descclassname">tensor_lda.tensor_lda.</code><code class="descname">TensorLDA</code><span class="sig-paren">(</span><em>n_components=10</em>, <em>alpha0=0.1</em>, <em>max_iter=1000</em>, <em>max_inference_iter=1000</em>, <em>n_restart=10</em>, <em>converge_tol=0.0001</em>, <em>inference_converge_tol=1e-06</em>, <em>inference_step_size=0.001</em>, <em>verbose=0</em>, <em>smooth_param=0.01</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/tensor_lda.html#TensorLDA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.tensor_lda.TensorLDA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Latent Dirichlet Allocation with tensor decomposition</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_components</strong> : int, optional (default=10)</p>
+<blockquote>
+<div><p>Number of topics.</p>
+</div></blockquote>
+<p><strong>alpha0</strong> : double, optional (default=0.1)</p>
+<blockquote>
+<div><p>Sum of topic prior alpha.</p>
+</div></blockquote>
+<p><strong>max_iter</strong> : integer, optional (default=100)</p>
+<blockquote>
+<div><p>The maximum number of iterations.</p>
+</div></blockquote>
+<p><strong>max_inference_iter</strong> : integer, optional (default=1000)</p>
+<blockquote>
+<div><p>The maximum number of inference iterations.</p>
+</div></blockquote>
+<p><strong>converge_tol</strong> : float, optional (default=1e-4)</p>
+<blockquote>
+<div><p>Convergence tolarence in training step.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : int, optional (default=0)</p>
+<blockquote>
+<div><p>Verbosity level.</p>
+</div></blockquote>
+<p><strong>random_state</strong> : int, RandomState instance or None, optional (default=None)</p>
+<blockquote class="last">
+<div><p>If int, random_state is the seed used by the random number generator;
+If RandomState instance, random_state is the random number generator;
+If None, the random number generator is the RandomState instance used
+by <cite>np.random</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<dl class="docutils">
+<dt>[1] “Tensor Decompositions for Learning Latent Variable Models”,</dt>
+<dd>Animashree Anandkumar, Rong Ge, Daniel Hsu, Sham M. Kakade,
+Matus Telgarsky, 2014</dd>
+<dt>[2] “Scalable Moment-Based Inference for Latent Dirichlet Allocation”,</dt>
+<dd>Chi Wang, Xueqing Liu, Yanglei Song, and Jiawei Han, 2014</dd>
+<dt>[3] “Tensor Decompositions and Applications”, Tamara G. Kolda,</dt>
+<dd>Brett W. Bader, 2009</dd>
+</dl>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>n_components_</strong></td>
+<td>(int) The effective number of components. The number must be smaller or equal to the number of features.</td>
+</tr>
+<tr class="row-even"><td><strong>components_</strong></td>
+<td>(array, [n_components, n_features]) Tarameters for topic word distribution.</td>
+</tr>
+<tr class="row-odd"><td><strong>alpha_</strong></td>
+<td>(array, [n_components])</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="tensor_lda.tensor_lda.TensorLDA.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/tensor_lda.html#TensorLDA.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.tensor_lda.TensorLDA.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Learn model for the data X with tensor decomposition method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array-like or sparse matrix, shape=(n_samples, n_features)</p>
+<blockquote>
+<div><p>Document word matrix.</p>
+</div></blockquote>
+<p><strong>y</strong> : Ignored</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">self</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tensor_lda.tensor_lda.TensorLDA.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/tensor_lda.html#TensorLDA.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.tensor_lda.TensorLDA.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform data X according to the fitted model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : array-like or sparse matrix, shape=(n_samples, n_features)</p>
+<blockquote>
+<div><p>Document word matrix.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>doc_topic_distr</strong> : shape=(n_samples, n_topics)</p>
+<blockquote class="last">
+<div><p>document topic distribution for X.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lda-sample-generator">
+<h2>LDA Sample Generator<a class="headerlink" href="#lda-sample-generator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tensor_lda.utils.sample_generator.LdaSampleGenerator">
+<em class="property">class </em><code class="descclassname">tensor_lda.utils.sample_generator.</code><code class="descname">LdaSampleGenerator</code><span class="sig-paren">(</span><em>n_topics</em>, <em>n_words</em>, <em>min_doc_size</em>, <em>mean_doc_size</em>, <em>doc_topic_prior</em>, <em>topic_word_prior</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/sample_generator.html#LdaSampleGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.sample_generator.LdaSampleGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate LDA samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_topics</strong> : int</p>
+<blockquote>
+<div><p>Number of topics</p>
+</div></blockquote>
+<p><strong>n_words</strong> : int</p>
+<blockquote>
+<div><p>Number of words in corpus</p>
+</div></blockquote>
+<p><strong>min_doc_size</strong> : int</p>
+<blockquote>
+<div><p>Min word count in a document</p>
+</div></blockquote>
+<p><strong>mean_doc_size</strong> : int</p>
+<blockquote>
+<div><p>Mean word count in a document</p>
+</div></blockquote>
+<p><strong>doc_topic_prior</strong> : double</p>
+<blockquote>
+<div><p>Uniform Dirichlet prior of a document</p>
+</div></blockquote>
+<p><strong>topic_word_prior</strong> : double</p>
+<blockquote>
+<div><p>Uniform Dirichlet prior of a topic</p>
+</div></blockquote>
+<p><strong>mean_doc_size: int</strong></p>
+<blockquote class="last">
+<div><p>Mean Value if word count in each document</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>topic_word_distr_</strong></td>
+<td>(array, [n_topics, n_words]) Topic word distribution.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="tensor_lda.utils.sample_generator.LdaSampleGenerator.generate_documents">
+<code class="descname">generate_documents</code><span class="sig-paren">(</span><em>n_docs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/sample_generator.html#LdaSampleGenerator.generate_documents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.sample_generator.LdaSampleGenerator.generate_documents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate Random doc-words Matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_docs</strong> : int</p>
+<blockquote class="last">
+<div><p>number of documents</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tensor_lda.utils.tensor_utils">
+<span id="utilities"></span><h2>Utilities<a class="headerlink" href="#module-tensor_lda.utils.tensor_utils" title="Permalink to this headline">¶</a></h2>
+<p>Utility functions for tensor operations</p>
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.khatri_rao_prod">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">khatri_rao_prod</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#khatri_rao_prod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.khatri_rao_prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Khatri-Rao product</p>
+<p>Generate Khatri-Rao product from 2 2-D matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : 2D array, shape (n, k)</p>
+<blockquote>
+<div><p>first matrix</p>
+</div></blockquote>
+<p><strong>b</strong> : 2D array, shape (m, k)</p>
+<blockquote>
+<div><p>second matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>matrix</strong> : 2D array, shape (n * m, k)</p>
+<blockquote class="last">
+<div><p>Khatri-Rao product of <cite>a</cite> and <cite>b</cite></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.rank_1_tensor_3d">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">rank_1_tensor_3d</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>c</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#rank_1_tensor_3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.rank_1_tensor_3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a 3-D tensor from 3 1-D vectors</p>
+<p>Generate a 3D tensor from 3 rank one vectors 
+<cite>a</cite>, <cite>b</cite>, and <cite>c</cite>. The returned 3-D tensor is
+in unfolded format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : array, shape (n,)</p>
+<blockquote>
+<div><p>first rank one vector</p>
+</div></blockquote>
+<p><strong>b</strong> : array, shape (n,)</p>
+<blockquote>
+<div><p>second rank one vector</p>
+</div></blockquote>
+<p><strong>c</strong> : array, shape (n,)</p>
+<blockquote>
+<div><p>thrid rank one vector</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tensor:  array, (n, n * n)</p>
+<blockquote class="last">
+<div><p>3D tensor in unfolded format. element
+(i, j, k) will map to (i, (n * k) + j)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.tensor_3d_from_matrix_vector">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">tensor_3d_from_matrix_vector</code><span class="sig-paren">(</span><em>b</em>, <em>a</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#tensor_3d_from_matrix_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.tensor_3d_from_matrix_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate 3-D tensor from 2-D matrix and 1-D vector</p>
+<p>This function is similar to <cite>tensor_3d_from_vector_matrix</cite>
+function. The only difference is the first argument is 2-D
+matrix and the second element is 1-D vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>b</strong> : array, shape (m, n)</p>
+<blockquote>
+<div><p>2-D matrix</p>
+</div></blockquote>
+<p><strong>a</strong> : array, shape (p,)</p>
+<blockquote>
+<div><p>vector</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>tensor</strong> : array, shape (m, n * p)</p>
+<blockquote class="last">
+<div><p>3D tensor in unfolded format.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.tensor_3d_from_vector_matrix">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">tensor_3d_from_vector_matrix</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#tensor_3d_from_vector_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.tensor_3d_from_vector_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate 3-D tensor from 1-D vector and 2-D matrix</p>
+<p>Generate a 3D tensor from a 1-D vector <cite>a</cite> and 2-D
+matrix <cite>b</cite>. The returned 3-D tensor is
+in unfolded format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : array, shape (m,)</p>
+<blockquote>
+<div><p>1-D vector</p>
+</div></blockquote>
+<p><strong>b</strong> : 2-D array, shape (n, p)</p>
+<blockquote>
+<div><p>2-D matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tensor:  array, (m, n * p)</p>
+<blockquote class="last">
+<div><p>3D tensor in unfolded format.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.tensor_3d_permute">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">tensor_3d_permute</code><span class="sig-paren">(</span><em>tensor</em>, <em>tensor_shape</em>, <em>a</em>, <em>b</em>, <em>c</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#tensor_3d_permute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.tensor_3d_permute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Permute the mode of a 3-D tensor</p>
+<p>This is a slow implementation to generate 3-D tensor
+permutations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tensor</strong> : 2D array, shape (n, m * k)</p>
+<blockquote>
+<div><p>3D tensor in unfolded format</p>
+</div></blockquote>
+<p><strong>tensor_shape</strong> : int triple</p>
+<blockquote>
+<div><p>Shape of the tensor. Since tensor is in
+unfolded format. We need it’s real format
+to calculate permutation.</p>
+</div></blockquote>
+<p><strong>a</strong> : int, {1, 2, 3}</p>
+<blockquote>
+<div><p>new first index</p>
+</div></blockquote>
+<p><strong>}</strong></p>
+<p><strong>b</strong> : int, {1, 2, 3}</p>
+<blockquote>
+<div><p>new second index</p>
+</div></blockquote>
+<p><strong>c</strong> : int, {1, 2, 3}</p>
+<blockquote class="last">
+<div><p>new thrid order index</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tensor_lda.utils.tensor_utils.tensor_3d_prod">
+<code class="descclassname">tensor_lda.utils.tensor_utils.</code><code class="descname">tensor_3d_prod</code><span class="sig-paren">(</span><em>tensor</em>, <em>a</em>, <em>b</em>, <em>c</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensor_lda/utils/tensor_utils.html#tensor_3d_prod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tensor_lda.utils.tensor_utils.tensor_3d_prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate product of 3D tensor with matrix on each dimension</p>
+<p>TODO: move it to test</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tensor</strong> : 3D array, shape (n1, n2, n3)</p>
+<p><strong>a</strong> : array, (n1, m)</p>
+<p><strong>b</strong> :  array, (n2, n)</p>
+<p><strong>c</strong> :  array, (n3, p)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>t_abc</strong> : array, (m, n, p)</p>
+<blockquote class="last">
+<div><p>tensor(a, b, c)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -178,7 +575,7 @@
         <a href="auto_examples/index.html" class="btn btn-neutral float-right" title="General examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Welcome to tensor-lda’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="introduction.html" class="btn btn-neutral" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -187,7 +584,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Chyi-Kwei Yau.
+        &copy; Copyright 2018, Chyi-Kwei Yau.
 
     </p>
   </div>

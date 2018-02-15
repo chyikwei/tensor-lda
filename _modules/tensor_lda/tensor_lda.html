@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.1
+                0.1.0
               </div>
             
           
@@ -92,7 +92,8 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../auto_examples/index.html">General examples</a></li>
 </ul>
 
@@ -158,9 +159,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tensor_lda.tensor_lda</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Latent Dirichlet Allocation with tesnsor Decomposition</span>
-
-<span class="sd">TODO: add short desc</span>
+<span></span><span class="sd">&quot;&quot;&quot;Latent Dirichlet Allocation with Tesnsor Decomposition</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># Author: Chyi-Kwei Yau</span>
@@ -171,21 +170,234 @@
 <span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
 
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="k">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.exceptions</span> <span class="k">import</span> <span class="n">NotFittedError</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="k">import</span> <span class="n">check_random_state</span><span class="p">,</span> <span class="n">check_array</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="k">import</span> <span class="n">check_non_negative</span>
+
+<span class="kn">from</span> <span class="nn">.moments</span> <span class="k">import</span> <span class="p">(</span><span class="n">first_order_moments</span><span class="p">,</span>
+                      <span class="n">cooccurrence_expectation</span><span class="p">,</span>
+                      <span class="n">second_order_moments</span><span class="p">,</span>
+                      <span class="n">third_order_monents</span><span class="p">,</span>
+                      <span class="n">whitening</span><span class="p">,</span>
+                      <span class="n">unwhitening</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.cp_decompose</span> <span class="k">import</span> <span class="n">cp_tensor_power_method</span>
+<span class="kn">from</span> <span class="nn">.inference</span> <span class="k">import</span> <span class="n">lda_inference_vi</span>
 
 
-<div class="viewcode-block" id="TensorLDA"><a class="viewcode-back" href="../../template.html#tensor_lda.tensor_lda.TensorLDA">[docs]</a><span class="k">class</span> <span class="nc">TensorLDA</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TensorLDA"><a class="viewcode-back" href="../../api.html#tensor_lda.tensor_lda.TensorLDA">[docs]</a><span class="k">class</span> <span class="nc">TensorLDA</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Latent Dirichlet Allocation with tensor decomposition</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="k">pass</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_components : int, optional (default=10)</span>
+<span class="sd">        Number of topics.</span>
 
-	<span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-		<span class="k">pass</span>
+<span class="sd">    alpha0 : double, optional (default=0.1)</span>
+<span class="sd">        Sum of topic prior alpha.</span>
 
-	<span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-		<span class="k">pass</span></div>
+<span class="sd">    max_iter : integer, optional (default=100)</span>
+<span class="sd">        The maximum number of iterations.</span>
 
+<span class="sd">    max_inference_iter : integer, optional (default=1000)</span>
+<span class="sd">        The maximum number of inference iterations.</span>
+<span class="sd">    </span>
+<span class="sd">    converge_tol : float, optional (default=1e-4)</span>
+<span class="sd">        Convergence tolarence in training step.</span>
+
+<span class="sd">    verbose : int, optional (default=0)</span>
+<span class="sd">        Verbosity level.</span>
+<span class="sd">    </span>
+<span class="sd">    random_state : int, RandomState instance or None, optional (default=None)</span>
+<span class="sd">        If int, random_state is the seed used by the random number generator;</span>
+<span class="sd">        If RandomState instance, random_state is the random number generator;</span>
+<span class="sd">        If None, the random number generator is the RandomState instance used</span>
+<span class="sd">        by `np.random`.</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_components_ : int</span>
+<span class="sd">        The effective number of components. The number must be smaller or equal</span>
+<span class="sd">        to the number of features.</span>
+
+<span class="sd">    components_ : array, [n_components, n_features]</span>
+<span class="sd">        Tarameters for topic word distribution.</span>
+<span class="sd">    </span>
+<span class="sd">    alpha_ : array, [n_components]</span>
+
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] &quot;Tensor Decompositions for Learning Latent Variable Models&quot;,</span>
+<span class="sd">        Animashree Anandkumar, Rong Ge, Daniel Hsu, Sham M. Kakade,</span>
+<span class="sd">        Matus Telgarsky, 2014</span>
+
+<span class="sd">    [2] &quot;Scalable Moment-Based Inference for Latent Dirichlet Allocation&quot;,</span>
+<span class="sd">        Chi Wang, Xueqing Liu, Yanglei Song, and Jiawei Han, 2014</span>
+
+<span class="sd">    [3] &quot;Tensor Decompositions and Applications&quot;, Tamara G. Kolda,</span>
+<span class="sd">        Brett W. Bader, 2009</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">alpha0</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">max_inference_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_restart</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                 <span class="n">converge_tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">inference_converge_tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+                 <span class="n">inference_step_size</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">smooth_param</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">=</span> <span class="n">alpha0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_inference_iter</span> <span class="o">=</span> <span class="n">max_inference_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_restart</span> <span class="o">=</span> <span class="n">n_restart</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converge_tol</span> <span class="o">=</span> <span class="n">converge_tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inference_converge_tol</span> <span class="o">=</span> <span class="n">inference_converge_tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inference_step_size</span> <span class="o">=</span> <span class="n">inference_step_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smooth_param</span> <span class="o">=</span> <span class="n">smooth_param</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+    <span class="k">def</span> <span class="nf">_check_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check model parameters.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;n_components&#39; parameter: </span><span class="si">%r</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid &#39;alpha0&#39; parameter: </span><span class="si">%r</span><span class="s2">&quot;</span>
+                             <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">)</span>
+
+        <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">n_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span>
+        <span class="k">if</span> <span class="n">n_features</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">:</span>
+            <span class="c1"># add warning</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_components_</span> <span class="o">=</span> <span class="n">n_features</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_components_</span> <span class="o">=</span> <span class="n">n_components</span>
+
+    <span class="k">def</span> <span class="nf">_check_non_neg_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">whom</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;check X format</span>
+
+<span class="sd">        check X format and make sure no negative value in X.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X :  array-like or sparse matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+        <span class="n">check_non_negative</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">whom</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">_check_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">whom</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check inference conditions</span>
+
+<span class="sd">        The function will check model is fitted and input matrix</span>
+<span class="sd">        has correct shape &amp; value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;components_&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NotFittedError</span><span class="p">(</span><span class="s2">&quot;no &#39;components_&#39; attribute in model.&quot;</span>
+                                 <span class="s2">&quot; Please fit model first.&quot;</span><span class="p">)</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_non_neg_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">whom</span><span class="p">)</span>
+
+        <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n_features</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The provided data has </span><span class="si">%d</span><span class="s2"> dimensions while &quot;</span>
+                <span class="s2">&quot;the model was trained with feature size </span><span class="si">%d</span><span class="s2">.&quot;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">n_features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">components_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+<div class="viewcode-block" id="TensorLDA.fit"><a class="viewcode-back" href="../../api.html#tensor_lda.tensor_lda.TensorLDA.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Learn model for the data X with tensor decomposition method</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like or sparse matrix, shape=(n_samples, n_features)</span>
+<span class="sd">            Document word matrix.</span>
+
+<span class="sd">        y : Ignored</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self       </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_non_neg_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;TensorLDA.fit&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_params</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">n_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components_</span>
+        <span class="n">alpha0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span>
+ 
+        <span class="c1"># 1st order moments</span>
+        <span class="n">m1</span><span class="p">,</span> <span class="n">ignored_doc_cnt</span> <span class="o">=</span> <span class="n">first_order_moments</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># 2nd order moments</span>
+        <span class="n">e2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cooccurrence_expectation</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="n">m2_vals</span><span class="p">,</span> <span class="n">m2_vecs</span> <span class="o">=</span> <span class="n">second_order_moments</span><span class="p">(</span>
+            <span class="n">n_components</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">alpha0</span><span class="p">)</span>
+
+        <span class="c1"># whitening matrix</span>
+        <span class="n">w_matrix</span> <span class="o">=</span> <span class="n">whitening</span><span class="p">(</span><span class="n">m2_vals</span><span class="p">,</span> <span class="n">m2_vecs</span><span class="p">)</span>
+        <span class="n">uw_matrix</span> <span class="o">=</span> <span class="n">unwhitening</span><span class="p">(</span><span class="n">m2_vals</span><span class="p">,</span> <span class="n">m2_vecs</span><span class="p">)</span>
+
+        <span class="c1"># 3rd order moments</span>
+        <span class="n">m3</span> <span class="o">=</span> <span class="n">third_order_monents</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">w_matrix</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">alpha0</span><span class="p">)</span>
+
+        <span class="c1"># ALS decomposition</span>
+        <span class="n">e_vals</span><span class="p">,</span> <span class="n">e_vecs</span><span class="p">,</span> <span class="n">n_iter</span> <span class="o">=</span> <span class="n">cp_tensor_power_method</span><span class="p">(</span><span class="n">m3</span><span class="p">,</span> <span class="n">n_components</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">n_restart</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span><span class="p">,</span>
+                                                        <span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_</span> <span class="o">=</span> <span class="n">n_iter</span>
+        <span class="c1">#self.cp_results_ = {</span>
+        <span class="c1">#    &#39;e_vals&#39;: e_vals,</span>
+        <span class="c1">#    &#39;e_vecs&#39;: e_vecs,</span>
+        <span class="c1">#}</span>
+        <span class="c1"># mormalize alpha to sum to alpha0</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">e_vals</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">alpha</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">*</span> <span class="n">alpha0</span>
+
+        <span class="c1"># unwhitening</span>
+        <span class="c1"># TODO: use L1 max</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">uw_matrix</span><span class="p">,</span> <span class="n">e_vecs</span><span class="p">)</span> <span class="o">*</span> <span class="n">e_vals</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="c1"># set negative part to 0</span>
+        <span class="n">components</span><span class="p">[</span><span class="n">components</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="c1"># smooth beta</span>
+        <span class="n">components</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">smooth_param</span><span class="p">)</span>
+        <span class="n">components</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">smooth_param</span> <span class="o">/</span> <span class="n">components</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">components</span> <span class="o">/=</span> <span class="n">components</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components_</span> <span class="o">=</span> <span class="n">components</span></div>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="TensorLDA.transform"><a class="viewcode-back" href="../../api.html#tensor_lda.tensor_lda.TensorLDA.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transform data X according to the fitted model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like or sparse matrix, shape=(n_samples, n_features)</span>
+<span class="sd">            Document word matrix.</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        doc_topic_distr : shape=(n_samples, n_topics)</span>
+<span class="sd">            document topic distribution for X.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_inference</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;TensorLDA.transform&quot;</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components_</span>
+        <span class="n">max_iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_inference_iter</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_converge_tol</span>
+
+        <span class="n">doc_topic_distr</span> <span class="o">=</span> <span class="n">lda_inference_vi</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+        <span class="n">doc_topic_distr</span> <span class="o">/=</span> <span class="n">doc_topic_distr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="c1">#doc_topic_distr = lda_inference_gd(X, alpha, beta,</span>
+        <span class="c1">#                                   max_iter, step_size, tol)</span></div></div>
+        <span class="k">return</span> <span class="n">doc_topic_distr</span>
 </pre></div>
 
            </div>
@@ -200,7 +412,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Chyi-Kwei Yau.
+        &copy; Copyright 2018, Chyi-Kwei Yau.
 
     </p>
   </div>

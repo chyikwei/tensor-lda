@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction &mdash; tesnsor-lda 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="tesnsor-lda 0.1.0 documentation" href="index.html"/>
+        <link rel="next" title="API Reference" href="api.html"/>
+        <link rel="prev" title="Welcome to tensor-lda’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> tesnsor-lda
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#lda-parameters">LDA Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-moments">Data Moments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#whitening">Whitening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensor-decomposition">Tensor Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-reconstruction">Parameter Reconstruction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">General examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tesnsor-lda</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Introduction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/introduction.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p><cite>TensorLDA</cite> uses tensor decomposition method to estimate parameters in a Latent Dirichlet Allocation model. This introduction will focus on how to learn LDA parameters with tensor decomposition method.</p>
+<div class="section" id="lda-parameters">
+<h2>LDA Parameters<a class="headerlink" href="#lda-parameters" title="Permalink to this headline">¶</a></h2>
+<p>First, we define LDA parameters:</p>
+<ul class="simple">
+<li><img class="math" src="_images/math/684381a21cd73ebbf43b63a087d3f7410ee99ce8.png" alt="K"/> : number of topics</li>
+<li><img class="math" src="_images/math/fae0e7a73748991e5540d874416000583f64f58e.png" alt="V"/> : vocabulary size</li>
+<li><img class="math" src="_images/math/3cb51f179750cad03ed005a537afc29cfa949112.png" alt="\alpha_i (i = 1...K)"/> : dirichlet prior for topic i</li>
+<li><img class="math" src="_images/math/e89765431934c995d7d6a5545dbd4dbf64122339.png" alt="\alpha_0"/> : sum of topic priors (<img class="math" src="_images/math/127266b55bf0950940593bfc85905bd52241c578.png" alt="\alpha_0 = \sum_{i=1}^{K} \alpha_i"/>)</li>
+<li><img class="math" src="_images/math/39780ebdd45d94726a1da5dea3d40d166527e27c.png" alt="\beta_i (i = 1...K)"/> : word distribution for topic i</li>
+</ul>
+<p>In the model we assume <img class="math" src="_images/math/e89765431934c995d7d6a5545dbd4dbf64122339.png" alt="\alpha_0"/> is given and our goal is to estimate <img class="math" src="_images/math/4f034deb7443b8ce1957aae3b736d391516b2461.png" alt="\alpha_i"/> and <img class="math" src="_images/math/dd57b9f88daa2aef380472e187027b1ec5c74719.png" alt="beta_i"/> from a given corpus.</p>
+</div>
+<div class="section" id="data-moments">
+<h2>Data Moments<a class="headerlink" href="#data-moments" title="Permalink to this headline">¶</a></h2>
+<p>Since the model is based on decomposition of third order tensor, another assumption here is each document contains at least 3 words. Let <img class="math" src="_images/math/fdf6501bec5987984965f15d09235c645fe06ccb.png" alt="x_1"/>, <img class="math" src="_images/math/1f1a225cd22b81817fc48b3a84dcf8f1a9e145d8.png" alt="x_2"/>, and <img class="math" src="_images/math/7ad3e1f47dbec35fb241967c165b65cc83366041.png" alt="x_3"/> be any triple of words in a document, the first three order data moments <img class="math" src="_images/math/ffba330429c3bb20da539da40bedd545f40e5a14.png" alt="M_1"/>, <img class="math" src="_images/math/0740b938e4955c67ef7d5d9bba2655c7e7acac61.png" alt="M_2"/>, and <img class="math" src="_images/math/74eaf9f68954a53906163f3234d54a5e8d980576.png" alt="M_3"/> are defined as:</p>
+<div class="math">
+<p><img src="_images/math/46d31ad505e9123fdd6315f7d69ad14e16a6a3e3.png" alt="M_1 = &amp; \mathop{\mathbb{E}}[x_1] \\
+
+M_2 = &amp; \mathop{\mathbb{E}}[x_1 \otimes x_2] - \frac{\alpha_0}{\alpha_0 + 1} M_1 \otimes M_1 \\
+
+M_3 = &amp; \mathop{\mathbb{E}}[x_1 \otimes  x_2 \otimes x_3] \\
+       &amp; - \frac{\alpha_0}{\alpha_0 + 2} (
+            \mathop{\mathbb{E}}[x_1 \otimes x_2 \otimes M_1] +
+            \mathop{\mathbb{E}}[x_1 \otimes M_1 \otimes x_3] +
+            \mathop{\mathbb{E}}[M_1 \otimes x_2 \otimes x_3]) \\
+      &amp; + \frac{\alpha_0^2}{(\alpha_0 + 2)(\alpha_0 + 1)} M_1 \otimes M_1 \otimes M_1"/></p>
+</div><p>Based on dirichelet priors, we can derive the relationship between data moments and model parameters as:</p>
+<div class="math">
+<p><img src="_images/math/7ba8c43274c202a0864a86f86c6dfadcad539bf8.png" alt="M_2 = &amp; \sum_{i=1}^{k} \alpha_i \beta_i \otimes \beta_i \\
+
+M_3 = &amp; \sum_{i=1}^{k} \alpha_i \beta_i \otimes \beta_i \otimes \beta_i"/></p>
+</div></div>
+<div class="section" id="whitening">
+<h2>Whitening<a class="headerlink" href="#whitening" title="Permalink to this headline">¶</a></h2>
+<p>As we know <img class="math" src="_images/math/a618cd028565b37c5ca1299b303bd4dbf6d95d1f.png" alt="\beta_i"/> and <img class="math" src="_images/math/a96130f0388455bb4c8398ff3b8e02e801952329.png" alt="\beta_j (j \neq i)"/> are not necessary orthogonal, the deccomposition of <img class="math" src="_images/math/74eaf9f68954a53906163f3234d54a5e8d980576.png" alt="M_3"/> may not be unique. Therefore, we need to orthogonize <img class="math" src="_images/math/410a9d0df9c135dd73b269cba7ef04dcfd932b1f.png" alt="\beta"/> first.</p>
+<p>To do this, we find orthogonal decomposition of <img class="math" src="_images/math/0740b938e4955c67ef7d5d9bba2655c7e7acac61.png" alt="M_2"/> where <img class="math" src="_images/math/a9630f4ff2bcc6f1ff7ae122ade77920ddaee982.png" alt="M_2 = U \Sigma U^\top"/>. Then we can define whitening matrix <img class="math" src="_images/math/6dc82fee9fba123d87a537c721a32354b2b27fab.png" alt="W = U \Sigma^{\frac{-1}{2}}"/>. And since <img class="math" src="_images/math/97e69241676ae1dce7fa9a3e156f35dca18cbd4e.png" alt="W^\top M_2 W = I"/>, <img class="math" src="_images/math/70b7994573251ccc7411663028872f34ebc4040e.png" alt="W^\top \beta"/> is orthogonal.</p>
+<p>The thrid order tensor after whitening is:</p>
+<div class="math">
+<p><img src="_images/math/cb2b890353605c68a366101894aeffe58084d399.png" alt="T =&amp; \mathop{\mathbb{E}}[W^\top x_1 \otimes W^\top x_2 \otimes W^\top x_3]
+
+  =&amp; \sum_{i=1}^{k} \alpha_i^{\frac{-1}{2}} (W^\top \beta_i \alpha_i^{\frac{1}{2}}) \otimes (W^\top \beta_i \alpha_i^{\frac{1}{2}}) \otimes (W^\top \beta_i \alpha_i^{\frac{1}{2}})
+
+  =&amp; \sum_{i=1}^{k} \lambda_i \nu_i \otimes \nu_i \otimes \nu_i"/></p>
+</div><p>Another advantage of whitening is dimension reduction. After whitening, the tensor dimension is reduced from <img class="math" src="_images/math/a9ff5ca287911146b0171e8d741d829cecb4fa9b.png" alt="\mathbb{R}^{V \times V \times V}"/> to <img class="math" src="_images/math/f75554473dc1dc87431de05a115a095dfa9ba6ac.png" alt="\mathbb{R}^{K \times K \times K}"/>.</p>
+</div>
+<div class="section" id="tensor-decomposition">
+<h2>Tensor Decomposition<a class="headerlink" href="#tensor-decomposition" title="Permalink to this headline">¶</a></h2>
+<p>Currently we implemented “Robust tensor power method” described in Reference [1]. Assuming tensor <img class="math" src="_images/math/f2d283a2071f9d043c9e0b0f794a8880fa0d3ce9.png" alt="T"/> is orthogonally decomposable, we can estimate one (eigenvalue, eigenvector) pair with power iteration update. Once a pair (<img class="math" src="_images/math/159e1bfcbbeedf7e28983ee80db2b2d37c3b3ebc.png" alt="\lambda_i"/>, <img class="math" src="_images/math/ea8e9890f020b058f5d3f414b4ec7e47669e9b38.png" alt="\nu_i"/>) is found, we deflate tensor <img class="math" src="_images/math/11a431a5454e6ea9c4f0ef19b274488034dd170d.png" alt="T = T - \lambda_i nu_i^{\otimes 3}"/> and compute the next (eigenvalue, eigenvector) pair. For details, check algorithm 1 in reference [1].</p>
+</div>
+<div class="section" id="parameter-reconstruction">
+<h2>Parameter Reconstruction<a class="headerlink" href="#parameter-reconstruction" title="Permalink to this headline">¶</a></h2>
+<p>Once we get all <img class="math" src="_images/math/b6dc810d74e83813c0320efac90bed29fe076a7f.png" alt="(\lambda_i, \nu_i)"/> pair, reconstruction is simple:</p>
+<div class="math">
+<p><img src="_images/math/5533c28e372ec0bc00286cf99ab6f60e664e55b3.png" alt="\alpha_i =&amp; \lambda_i^{-2}
+
+\beta_i =&amp; U \Sigma^{\frac{1}{2}} \lambda_i \nu_i"/></p>
+</div><div class="topic">
+<p class="topic-title first">References:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.cs.columbia.edu/~djhsu/papers/power-jmlr.pdf">“Tensor Decompositions for Learning Latent Variable Models”</a>
+A. Anandkumar, R. Ge, D. Hsu, S. M. Kakade, M. Telgarsky, 2014</li>
+<li><a class="reference external" href="https://www.microsoft.com/en-us/research/wp-content/uploads/2014/09/ecmlpkdd14STOD.pdf">“Scalable Moment-Based Inference for Latent Dirichlet Allocation”</a>
+C. Wang, X. Liu, Y. Song, and J. Han, 2014</li>
+<li><a class="reference external" href="http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf">“Latent Dirichlet Allocation”</a>
+D. Blei, A. Ng, M. Jordan, 2003</li>
+<li><a class="reference external" href="http://scikit-learn.org/stable/modules/decomposition.html#latent-dirichlet-allocation-lda">“Latent Dirichlet Allocation (Scikit-learn document)”</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to tensor-lda’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Chyi-Kwei Yau.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

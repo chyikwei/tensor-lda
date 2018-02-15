@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>tensor_lda.utils.sample_generator &mdash; tesnsor-lda 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="tesnsor-lda 0.1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> tesnsor-lda
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">General examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">tesnsor-lda</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>tensor_lda.utils.sample_generator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for tensor_lda.utils.sample_generator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulate the generative process of LDA and generate corpus based on it</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">coo_matrix</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">poisson</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="k">import</span> <span class="n">check_random_state</span>
+<span class="kn">from</span> <span class="nn">sklearn.externals.six.moves</span> <span class="k">import</span> <span class="n">xrange</span>
+
+
+<div class="viewcode-block" id="LdaSampleGenerator"><a class="viewcode-back" href="../../../api.html#tensor_lda.utils.sample_generator.LdaSampleGenerator">[docs]</a><span class="k">class</span> <span class="nc">LdaSampleGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate LDA samples</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_topics : int</span>
+<span class="sd">        Number of topics</span>
+<span class="sd">    </span>
+<span class="sd">    n_words : int</span>
+<span class="sd">        Number of words in corpus</span>
+
+<span class="sd">    min_doc_size : int</span>
+<span class="sd">        Min word count in a document</span>
+<span class="sd">    </span>
+<span class="sd">    mean_doc_size : int</span>
+<span class="sd">        Mean word count in a document</span>
+<span class="sd">    </span>
+<span class="sd">    doc_topic_prior : double</span>
+<span class="sd">        Uniform Dirichlet prior of a document</span>
+<span class="sd">    </span>
+<span class="sd">    topic_word_prior : double</span>
+<span class="sd">        Uniform Dirichlet prior of a topic</span>
+
+<span class="sd">    mean_doc_size: int</span>
+<span class="sd">        Mean Value if word count in each document</span>
+
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    topic_word_distr_ : array, [n_topics, n_words]</span>
+<span class="sd">       Topic word distribution.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_topics</span><span class="p">,</span> <span class="n">n_words</span><span class="p">,</span> <span class="n">min_doc_size</span><span class="p">,</span>
+                 <span class="n">mean_doc_size</span><span class="p">,</span> <span class="n">doc_topic_prior</span><span class="p">,</span>
+                 <span class="n">topic_word_prior</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_topics</span> <span class="o">=</span> <span class="n">n_topics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_words</span> <span class="o">=</span> <span class="n">n_words</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_doc_size</span> <span class="o">=</span> <span class="n">min_doc_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_doc_size</span> <span class="o">=</span> <span class="n">mean_doc_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_topic_prior</span> <span class="o">=</span> <span class="n">doc_topic_prior</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_word_prior</span> <span class="o">=</span> <span class="n">topic_word_prior</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state_</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="c1"># hidden variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_word_prior_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">topic_word_prior</span><span class="p">,</span> <span class="n">n_words</span><span class="p">)</span>
+        <span class="c1"># (n_topics, n_words)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc_topic_prior_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_topic_prior</span><span class="p">,</span> <span class="n">n_topics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_word_distr_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state_</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topic_word_prior_</span><span class="p">,</span> <span class="n">n_topics</span><span class="p">)</span>
+        
+        
+<div class="viewcode-block" id="LdaSampleGenerator.generate_documents"><a class="viewcode-back" href="../../../api.html#tensor_lda.utils.sample_generator.LdaSampleGenerator.generate_documents">[docs]</a>    <span class="k">def</span> <span class="nf">generate_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_docs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate Random doc-words Matrix</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_docs : int</span>
+<span class="sd">            number of documents</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        doc_word_mtx : sparse matrix, [n_docs, n_words]</span>
+<span class="sd">            document words matrix</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_state_</span>
+        <span class="n">n_topics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_topics</span>
+        <span class="n">n_words</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_words</span>
+        <span class="n">docs_size</span> <span class="o">=</span> <span class="n">poisson</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_doc_size</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_doc_size</span><span class="p">),</span>
+                                <span class="n">size</span><span class="o">=</span><span class="n">n_docs</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">rs</span><span class="p">)</span>
+        <span class="n">docs_size</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_doc_size</span>
+        <span class="n">doc_prior</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_topic_prior</span><span class="p">,</span> <span class="n">n_topics</span><span class="p">)</span>
+        <span class="c1"># (n_docs, n_topics)</span>
+        <span class="n">docs_distr</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">dirichlet</span><span class="p">(</span><span class="n">doc_prior</span><span class="p">,</span> <span class="n">n_docs</span><span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">n_docs</span><span class="p">):</span>
+            <span class="n">word_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topic_word_distr_</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">docs_distr</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="n">word_idx</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_words</span><span class="p">,</span> <span class="n">docs_size</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="n">word_dist</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">docs_size</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">word_idx</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+        <span class="n">doc_word_mtx</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span>
+                                  <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_docs</span><span class="p">,</span> <span class="n">n_words</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">docs_distr</span><span class="p">,</span> <span class="n">doc_word_mtx</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Chyi-Kwei Yau.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
