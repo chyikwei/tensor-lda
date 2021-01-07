@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/chyikwei/tensor-lda.svg?branch=master)](https://travis-ci.org/chyikwei/tensor-lda)
-[![Build Status](https://circleci.com/gh/chyikwei/tensor-lda.png?&style=shield)](https://circleci.com/gh/gh/chyikwei/tensor-lda)
 [![Coverage Status](https://coveralls.io/repos/github/chyikwei/tensor-lda/badge.svg?branch=master)](https://coveralls.io/github/chyikwei/tensor-lda?branch=master)
 
 Tensor LDA
